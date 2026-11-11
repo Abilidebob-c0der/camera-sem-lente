@@ -179,6 +179,48 @@
   }
   .conexao { font: 600 11px var(--mono); color: var(--fraco); }
   .conexao.ok { color: #3f6f16; } .conexao.ruim { color: var(--mov); }
+.visor canvas.invertido{transform:rotate(180deg)}
+#respCv{width:100%;display:block}
+
+/* ===== Abelha (pixel art) ===== */
+.abelha { display: inline-block; width: 30px; height: 26px; flex: none; image-rendering: pixelated; }
+.abelha svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.abelha .ab-asa { transform-box: fill-box; animation: ab-bate .16s steps(2, jump-none) infinite alternate; }
+.abelha .ab-asa-e { transform-origin: 100% 60%; }
+.abelha .ab-asa-d { transform-origin: 0% 60%; }
+.abelha svg.lado .ab-asa-e { transform-origin: 60% 100%; }
+@keyframes ab-bate { from { transform: scaleY(1); } to { transform: scaleY(.45); } }
+.abelha.paira { animation: ab-paira 1.6s ease-in-out infinite alternate; }
+@keyframes ab-paira { from { transform: translateY(1px) rotate(-3deg); } to { transform: translateY(-4px) rotate(3deg); } }
+.abelha .ab-rastro { animation: ab-rastro .3s steps(2, jump-none) infinite alternate; }
+@keyframes ab-rastro { from { opacity: .9; } to { opacity: .25; } }
+.marca .abelha { position: relative; margin-left: -10px; margin-right: 2px; align-self: flex-start; margin-top: -2px; }
+.sobre > .abelha { position: absolute; width: 34px; height: 30px; margin: -12px 0 0 74px; }
+.abelha-voo { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; width: 56px; height: 34px; animation: ab-cruza 3.2s linear forwards; }
+.abelha-voo .abelha { width: 100%; height: 100%; animation: ab-zigue .5s ease-in-out infinite alternate; }
+@keyframes ab-cruza { from { transform: translate(-70px, var(--y0)); } to { transform: translate(calc(100vw + 20px), var(--y1)); } }
+@keyframes ab-zigue { from { transform: translateY(-7px) rotate(-4deg); } to { transform: translateY(7px) rotate(4deg); } }
+.abelha.feliz { animation: ab-feliz .45s ease-in-out 4 alternate; }
+@keyframes ab-feliz { from { transform: translateY(0) rotate(0); } to { transform: translateY(-8px) rotate(-12deg) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .abelha, .abelha .ab-asa, .abelha .ab-rastro, .abelha-voo, .abelha-voo .abelha { animation: none !important; } .abelha-voo { display: none; } }
+
+/* ===== Colmeia ===== */
+.colmeia { display: inline-block; position: relative; width: 44px; height: 36px; flex: none; vertical-align: middle; }
+.colmeia svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.colmeia .cm-colmeia { transform-box: view-box; transform-origin: 10.5px 5px; animation: cm-balanca 3.2s ease-in-out infinite alternate; }
+@keyframes cm-balanca { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.colmeia .orbita { position: absolute; left: 44%; top: 70%; width: 0; height: 0; animation: cm-orbita 4.5s linear infinite; }
+.colmeia .orbita .abelha { position: absolute; width: 13px; height: 11px; left: 15px; top: -6px; }
+@keyframes cm-orbita { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.colmeia.grande { width: 92px; height: 76px; }
+.colmeia.grande .orbita .abelha { width: 22px; height: 19px; left: 34px; top: -10px; }
+details > summary .colmeia { float: right; width: 34px; height: 28px; margin: -6px 0 -8px 8px; }
+.rodape { position: relative; padding-top: 62px; }
+.rodape .colmeia { position: absolute; right: 9%; top: 0; }
+.cartao .tit .colmeia { width: 30px; height: 25px; margin: -6px 6px -6px 0; }
+#gravVazio .colmeia { position: absolute; top: 14%; right: 9%; }
+details > summary .colmeia .orbita .abelha { width: 10px; height: 9px; left: 12px; top: -5px; }
+@media (prefers-reduced-motion: reduce) { .colmeia .cm-colmeia, .colmeia .orbita { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -212,7 +254,7 @@
   <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
   <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
   <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
-</svg></span>
+</svg></span><span class="abelha paira" id="abelhaTopo" title="Zum!"></span>
     <div style="min-width:0"><h1>Câmera sem Lente</h1><p id="fonte">—</p></div>
   </div>
   <div id="pill" class="pill" role="status" aria-live="polite">—</div>
@@ -268,7 +310,7 @@
   </section>
 
   <details class="cartao">
-    <summary>Como funciona</summary>
+    <summary>Como funciona<span class="colmeia"></span></summary>
     <div class="texto">
       <p><b>Cada par de sensores forma um link.</b> Quando alguém fica entre dois sensores, o corpo absorve parte do sinal e aquele link perde alguns dB. Com vários sensores em volta da sala, os links se cruzam como uma rede.</p>
       <p><b>A posição sai do cruzamento.</b> O algoritmo (tomografia por rádio, ou RTI) junta a perda de todos os links e reconstrói um mapa 2D. O ponto mais "quente" é onde a pessoa está. Diferente de um detector de movimento, ele vê a pessoa mesmo parada.</p>
@@ -283,14 +325,14 @@
 <main id="telaSonar" class="tela oculto-total">
  <div class="col-esq">
   <div class="seg seg-cheio" id="segVisao" role="tablist" aria-label="Visão do sonar">
-    <button data-v="eco" class="ativa">Ecograma</button><button data-v="dist">Distância</button><button data-v="formas">Formas</button>
+    <button data-v="eco" class="ativa">Ecograma</button><button data-v="dist">Distância</button><button data-v="formas">Radar</button>
   </div>
   <section class="visor">
     <canvas id="eco"></canvas>
     <div class="hud tl"><span class="rec"></span><span id="sonHudModo">SONAR</span></div>
     <div class="hud tr" id="sonHudAlvo">—</div>
     <div class="hud" id="sonHudInfo" style="top:28px;left:14px;font-size:9.5px;opacity:.85"></div>
-    <div class="sobre" id="sonSobre"><span class="mascote" data-pose="dormindo" id="sonArte"></span><p id="sonSobreTit">Sonar desligado<small id="sonSobreSub">toque em Ligar sonar ou veja a demonstração</small></p></div>
+    <div class="sobre" id="sonSobre"><span class="mascote" data-pose="dormindo" id="sonArte"></span><span class="abelha paira" id="abelhaSobre"></span><p id="sonSobreTit">Sonar desligado<small id="sonSobreSub">toque em Ligar sonar ou veja a demonstração</small></p></div>
   </section>
   <div class="dois" style="margin-top:10px">
     <button class="botao primario" id="btnSonar">Ligar sonar</button>
@@ -314,12 +356,18 @@
   <!-- ===== visão DISTÂNCIA ===== -->
   <div class="so-dist oculto-total">
     <section class="grade tres">
-      <div class="num"><b id="dPerto">—</b><span>mais perto</span></div>
+      <div class="num"><b id="dPerto">—</b><span id="dPertoTit">alvo à frente</span></div>
       <div class="num"><b id="dMov">—</b><span>movimento a</span></div>
       <div class="num"><b id="dVel">—</b><span id="dVelTit">velocidade</span></div>
     </section>
+    <section class="cartao controles">
+      <div class="tit" style="margin:0"><span>Qual eco medir</span><b id="dTravaTxt">automático</b></div>
+      <div class="linha">Escolha <div class="seg" id="segAlvo"><button data-v="auto" class="ativa">Automática</button><button data-v="perto">Mais perto</button></div></div>
+      <div class="dois"><button class="botao primario" id="btnAchar">Achar o alvo</button><button class="botao" id="btnDestravar" disabled>Destravar</button></div>
+      <p class="dica" style="text-align:left;margin:0" id="dAcharTxt">Piso, teto e o seu corpo também ecoam. Para o app saber qual eco é o da parede, toque em <b>Achar o alvo</b> e vá e volte devagar com o iPhone uns 10 cm na direção dela por 4 segundos: só o eco dela muda de lugar. Você também pode tocar num eco da régua ou da lista para travar nele.</p>
+    </section>
     <section class="cartao">
-      <div class="tit"><span>Ecos detectados (coisas paradas)</span><b id="dTotal"></b></div>
+      <div class="tit"><span>Ecos detectados (toque para travar)</span><b id="dTotal"></b></div>
       <ul class="log" id="dLista"><li class="vazio">—</li></ul>
     </section>
     <section class="cartao controles">
@@ -333,17 +381,18 @@
   <div class="so-formas oculto-total">
     <section class="cartao controles">
       <div class="dois"><button class="botao primario" id="btnVarrer">Iniciar varredura</button><button class="botao" id="btnLimparVarr">Limpar</button></div>
+      <div class="linha">Visor <div class="seg" id="segInverter"><button data-v="0" class="ativa">Normal</button><button data-v="1">De ponta-cabeça</button></div></div>
       <div class="linha">Nitidez angular <div class="seg" id="segNitidez"><button data-v="1" class="ativa">Ligada</button><button data-v="0">Desligada</button></div></div>
       <div class="linha">Largura do feixe <div class="seg" id="segFeixe"><button data-v="12">Estreito</button><button data-v="17" class="ativa">Médio</button><button data-v="25">Largo</button></div></div>
-      <p class="dica" style="text-align:left;margin:0" id="fComo">Segure o iPhone deitado (tela para cima), com a parte de baixo apontando para a frente, e gire devagar de um lado para o outro, como um farol, por uns 20 segundos.</p>
+      <p class="dica" style="text-align:left;margin:0" id="fComo">Segure o iPhone deitado (tela para cima), com a parte de baixo apontando para longe de você, e gire devagar no lugar, como o radar de um navio: um leque de um lado para o outro ou uma volta inteira (uns 30 s). Se a tela ficar de cabeça para baixo para você, use "Visor: De ponta-cabeça".</p>
       <p class="dica-son" id="fAviso"></p>
     </section>
     <section class="cartao">
-      <div class="tit"><span>Formas reconhecidas</span><b id="fTotal"></b></div>
+      <div class="tit"><span><span class="colmeia"></span>Formas reconhecidas</span><b id="fTotal"></b></div>
       <ul class="log" id="fLista"><li class="vazio">Faça uma varredura para começar</li></ul>
     </section>
     <section class="cartao"><div class="texto" style="margin:0">
-      <p><b>Como ler:</b> o leque é o que fica à sua frente, visto de cima, com o iPhone na ponta de baixo. Cores fortes são ecos fortes. Uma linha reta e comprida é uma superfície plana (parede, porta, armário); uma mancha pequena é um objeto.</p>
+      <p><b>Como ler:</b> é o radar visto de cima, com o iPhone no centro (ou na ponta de baixo, se você varreu só um leque). O traço claro é para onde ele aponta agora; a parte que acabou de ser varrida brilha mais e vai esmaecendo. Cores fortes são ecos fortes. Uma linha reta e comprida é uma superfície plana (parede, porta, armário); uma mancha pequena é um objeto.</p>
       <p><b>Nitidez angular:</b> o alto-falante espalha o som num cone largo, o que borra cada objeto por várias dezenas de graus. Com a nitidez ligada, o app desfaz esse borrão matematicamente (deconvolução de Richardson–Lucy, a mesma ideia usada em telescópios). Nos testes, dois objetos a 30° um do outro passam a aparecer separados. "Largura do feixe" diz ao algoritmo o tamanho desse borrão: se os objetos saírem duplicados, escolha um feixe mais estreito; se continuarem borrados, um mais largo.</p>
       <p><b>Limite honesto:</b> distâncias são boas; larguras e ângulos são aproximados, e objetos a menos de ~25° um do outro ainda se misturam.</p>
     </div></section>
@@ -352,19 +401,25 @@
   <section class="cartao controles">
     <div class="linha">Alcance <div class="seg" id="segAlc"><button data-v="1.5">1,5 m</button><button data-v="3" class="ativa">3 m</button><button data-v="5">5 m</button></div></div>
     <div class="linha">Sensibilidade <div class="seg" id="segSonSens"><button data-v="6">Baixa</button><button data-v="4.5" class="ativa">Média</button><button data-v="3.2">Alta</button></div></div>
-    <div class="linha">Faixa de som <div class="seg" id="segBanda"><button data-v="0" class="ativa">Auto</button><button data-v="1">Discreta</button><button data-v="2">Forte</button><button data-v="3">Precisa</button></div></div>
+    <div class="linha">Faixa de som <div class="seg" id="segBanda"><button data-v="0" class="ativa">Auto</button><button data-v="1">Discreta</button><button data-v="2">Forte</button><button data-v="3">Precisa</button><button data-v="4">Ampla</button></div></div>
     <div class="linha oculto-total" id="linhaMic">Microfone <select id="sonMic" aria-label="Microfone"></select></div>
     <div class="linha">Volume <input type="range" id="sonVol" min="0.1" max="1" step="0.05" value="0.7"><output id="sonVolOut">70%</output></div>
     <button class="botao" id="btnSonarCalib">Recalibrar (fique parado 3 s)</button>
   </section>
+  <section class="cartao">
+    <div class="tit"><span>O que o microfone ouve, por frequência</span><b id="respTxt">—</b></div>
+    <canvas id="respCv"></canvas>
+    <p class="dica" style="text-align:left;margin:6px 0 0" id="respDica">Ao ligar, o sonar fica 0,4 s em silêncio (para ouvir o ruído) e, no modo Auto, toca um chiado de teste de 1 s para medir quais frequências chegam limpas neste aparelho.</p>
+  </section>
   <details class="cartao">
-    <summary>Como usar e limites</summary>
+    <summary>Como usar e limites<span class="colmeia" data-abelhas="1"></span></summary>
     <div class="texto">
       <p><b>Ecograma:</b> apoie o iPhone parado, com a parte de baixo livre. Fique parado 3 segundos enquanto ele calibra; depois o que se mexe aparece como uma linha colorida, na distância em que está.</p>
       <p><b>Distância:</b> mede o que está parado à frente (paredes, móveis) como uma trena, e também quem se move e a que velocidade. Para mais precisão, use o ajuste com uma distância medida com fita.</p>
       <p><b>Formas:</b> gire o iPhone devagar; ele usa o giroscópio para saber para onde está apontando e monta um mapa visto de cima.</p>
       <p><b>Respiração:</b> sente-se parado de frente para o iPhone, a 0,5–1 m, por uns 15 segundos (visão Ecograma).</p>
-      <p><b>Chiado agudo:</b> na faixa <b>Discreta</b> o som fica entre 17,5 e 20,5 kHz, que muita gente não ouve. A <b>Forte</b> (14,5 a 17,5 kHz) alcança mais, mas é audível. A <b>Precisa</b> (14 a 20,5 kHz) usa o dobro da largura de banda: o pulso fica com metade do tamanho, separando objetos que estão a poucos centímetros um do outro, e o eco fica mais forte. É a melhor para medir, mas o chiado é bem audível. No modo <b>Auto</b> o app testa Discreta e Forte e escolhe.</p>
+      <p><b>Faixas de som:</b> <b>Discreta</b> (17,5–20,5 kHz) quase ninguém ouve; <b>Forte</b> (14,5–17,5 kHz) é audível; <b>Precisa</b> (14–20,5 kHz) tem o dobro da largura de banda, então o pulso fica com metade do tamanho e separa objetos próximos; <b>Ampla</b> (8–16 kHz, a mesma ideia do sistema acadêmico BatMapper) é bem audível, mas funciona mesmo quando o navegador corta os agudos do microfone, o que acontece em alguns iPhones. No modo <b>Auto</b> o app toca um chiado de teste, mede o que chega limpo e escolhe a faixa com mais largura útil.</p>
+      <p><b>Equalização:</b> o alto-falante e o microfone do celular não respondem igual em todas as frequências. O app mede essa resposta pelo próprio eco direto e a "aplaina" (filtro de Wiener), usando só o trecho que chega acima do ruído. O pulso fica mais curto e limpo, e os ecos ficam mais fáceis de separar.</p>
       <p><b>No Mac:</b> funciona no Safari ou no Chrome; escolha o microfone se tiver mais de um. A visão Formas precisa de giroscópio, então funciona só no iPhone.</p>
       <p><b>Onde funciona:</b> aqui no chat o microfone é bloqueado; use o endereço do seu site (github.io) para o sonar de verdade.</p>
     </div>
@@ -381,7 +436,7 @@
     <div class="hud tr" id="hudGravVal">0%</div>
     <div class="hud bl" id="hudGravRssi">— dBm</div>
     <div class="hud br" id="hudGravTempo">00:00</div>
-    <div class="sobre" id="gravVazio"><span class="mascote" data-pose="filme"></span><p>Nenhuma gravação ainda<small>grave com o atalho no iPhone e cole a gravação aqui</small></p></div>
+    <div class="sobre" id="gravVazio"><span class="mascote" data-pose="filme"></span><span class="colmeia grande" data-abelhas="1"></span><p>Nenhuma gravação ainda<small>grave com o atalho no iPhone e cole a gravação aqui</small></p></div>
   </section>
   <div class="player">
     <button class="botao play" id="btnPlay" aria-label="Reproduzir">▶</button>
@@ -407,7 +462,7 @@
   <section class="cartao"><div class="tit"><span>Perturbação × limiar</span><b id="gAgitTxt">—</b></div><canvas id="gFaixa"></canvas></section>
   <section class="cartao"><div class="tit"><span>Movimentos detectados</span><b id="gLogTotal"></b></div><ul id="gLog" class="log"><li class="vazio">—</li></ul></section>
   <details class="cartao">
-    <summary>Como gravar pelo iPhone</summary>
+    <summary>Como gravar pelo iPhone<span class="colmeia"></span></summary>
     <div class="texto">
       <p><b>1.</b> No app Atalhos do iPhone, toque em <b>Câmera sem Lente</b>.</p>
       <p><b>2.</b> Nos primeiros 15 segundos, deixe o iPhone parado e fique fora do caminho entre ele e o roteador: é a calibração.</p>
@@ -486,6 +541,7 @@
 <div class="reacao" id="reacao" role="status" aria-live="polite"><span class="mascote" id="reacaoArte"></span><p id="reacaoTxt"></p></div>
 
 <footer class="rodape">
+  <span class="colmeia grande" data-abelhas="1"></span>
   <svg viewBox="0 0 600 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34 C20 20 40 16 60 22 C80 8 110 8 125 20 C145 6 175 10 185 22 C205 12 230 12 245 24 C265 8 300 6 315 20 C335 10 360 12 372 24 C392 10 420 8 438 21 C455 12 480 12 492 24 C510 10 540 10 556 22 C572 14 590 18 600 26 L600 34 Z" fill="#2c5a1e"/><path d="M0 34 C30 26 50 24 75 28 C100 18 130 20 150 29 C175 20 205 21 222 30 C250 20 280 21 300 29 C325 19 355 21 372 30 C398 21 425 22 445 29 C470 20 500 22 520 30 C545 22 575 23 600 30 L600 34 Z" fill="#3f7a27"/></svg>
   Câmera sem Lente · enxergando com sinais, não com lentes
 </footer>
@@ -660,6 +716,7 @@ const Simulador = (() => {
 
 const SonarDSP = (() => {
   const C = 343;                        // velocidade do som (m/s)
+  const DIRETO = 0.015;                 // metade do caminho alto-falante → microfone (o eco direto não sai do zero)
   const clampSnr = v => Number.isFinite(v) ? Math.max(0, Math.min(v, 90)) : 0;
 
   const TAB = new Map();
@@ -689,29 +746,94 @@ const SonarDSP = (() => {
   // Sinal transmitido + espectro de referência
   function criar(fs, { f0 = 17500, f1 = 20500, dur = 0.020 } = {}) {
     const N = 2048, Lc = Math.round(dur * fs), tx = new Float32Array(N);
+    f1 = Math.min(f1, fs * 0.47);
     for (let n = 0; n < Lc; n++) {
       const t = n / fs, w = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (Lc - 1));
       tx[n] = w * Math.sin(2 * Math.PI * (f0 * t + (f1 - f0) * t * t / (2 * dur)));
     }
     const cr = Float64Array.from(tx), ci = new Float64Array(N); fft(cr, ci, false);
-    const mask = new Uint8Array(N);
-    for (let k = 1; k < N / 2; k++) { const f = k * fs / N; if (f >= f0 - 500 && f <= f1 + 500) mask[k] = 1; }
+    const mask = new Uint8Array(N), H = N / 2 + 1, tmag = new Float64Array(H);
+    for (let k = 1; k < N / 2; k++) { const f = k * fs / N; tmag[k] = Math.hypot(cr[k], ci[k]); if (f >= f0 - 500 && f <= f1 + 500) mask[k] = 1; }
+    const peso = new Float64Array(N); for (let k = 0; k < N; k++) peso[k] = mask[k] ? 2 : 0;
     const D = Math.max(1, Math.round(0.01 * 2 / C * fs));          // passo de ~1 cm
-    return { fs, N, tx, cr, ci, mask, D, dr: D * C / (2 * fs), f0, f1,
+    return { fs, N, tx, cr, ci, mask, tmag, peso, D, dr: D * C / (2 * fs), f0, f1,
              lag: -1, lagHist: new Float64Array(N), lagN: 0, A0: 0, re: new Float64Array(N), im: new Float64Array(N),
-             snr: 0, clip: 0, pico: 0, meia: 0,
-             fps: fs / N, lambda: C / ((f0 + f1) / 2) };
+             snr: 0, clip: 0, pico: 0, meia: 0, ruidoPot: 0,
+             Py: new Float64Array(H), Pn: new Float64Array(H), nPy: 0, nRuido: 0, nq: 0, eq: false, util: null, snrEsp: null,
+             fps: fs / N, lambda: C / ((f0 + f1) / 2), forma: null };
+  }
+
+  // Silêncio no começo: o que o microfone ouve sem o chirp = espectro do ruído (para saber que frequências chegam limpas)
+  function ruido(s, bloco) {
+    const { N, re, im } = s, H = N / 2 + 1;
+    for (let i = 0; i < N; i++) { re[i] = bloco[i]; im[i] = 0; }
+    fft(re, im, false);
+    const a = 1 / (s.nRuido + 1);
+    for (let k = 0; k < H; k++) s.Pn[k] += a * (re[k] * re[k] + im[k] * im[k] - s.Pn[k]);
+    s.nRuido++;
+  }
+
+  // Equalização: com o espectro do eco direto (alto-falante → microfone) e o do ruído, monta um filtro que
+  // deixa a resposta plana só onde o sinal chega limpo e escolhe automaticamente a faixa útil (Wiener + janela de Hann).
+  function equalizar(s) {
+    const { N, fs, Py, Pn, tmag } = s, H = N / 2 + 1, W = Math.max(2, Math.round(300 / (fs / N)));
+    const sm = (P, k) => { let t = 0, n = 0; for (let j = k - W; j <= k + W; j++) if (j > 0 && j < H) { t += P[j]; n++; } return t / (n || 1); };
+    const temRuido = s.nRuido >= 4;
+    let tmax = 0; for (let k = 1; k < H; k++) if (s.mask[k] && tmag[k] > tmax) tmax = tmag[k];
+    const G = new Float64Array(H), Nn = new Float64Array(H), ok = new Uint8Array(H), snr = new Float64Array(H);
+    for (let k = 1; k < H; k++) {
+      const py = sm(Py, k), pn = temRuido ? Math.max(sm(Pn, k), 1e-14) : py * 1e-3;
+      Nn[k] = pn; G[k] = Math.sqrt(Math.max(py - pn, 0)); snr[k] = G[k] * G[k] / pn;
+      ok[k] = s.mask[k] && tmag[k] > 0.08 * tmax && snr[k] >= 4 ? 1 : 0;                       // ≥ 6 dB acima do ruído
+    }
+    // maior trecho contínuo útil (tolera buracos de até ~100 Hz)
+    let melhor = [0, -1], ini = -1, ult = -1;
+    for (let k = 1; k < H; k++) {
+      if (ok[k]) { if (ini < 0 || k - ult > 4) ini = k; ult = k; if (ult - ini > melhor[1] - melhor[0]) melhor = [ini, ult]; }
+    }
+    const [k0, k1] = melhor, largura = (k1 - k0 + 1) * fs / N;
+    s.snrEsp = snr; s.util = { f0: k0 * fs / N, f1: k1 * fs / N, hz: Math.max(0, largura) };
+    if (largura < 700) { s.eq = false; for (let k = 0; k < N; k++) s.peso[k] = s.mask[k] && k < H ? 2 : 0; formaPulso(s, null); return; }
+    s.peso.fill(0);
+    let norm = 0;
+    for (let k = k0; k <= k1; k++) {
+      const jan = 0.5 - 0.5 * Math.cos(2 * Math.PI * (k - k0 + 0.5) / (k1 - k0 + 1));
+      const w = jan * G[k] / ((G[k] * G[k] + Nn[k]) * Math.max(tmag[k], 1e-9));             // 1/|T·H| regularizado
+      s.peso[k] = 2 * w; norm += jan;
+    }
+    s.eq = true; s.A0 = 0;                            // a escala do pulso mudou: recomeça a média do eco direto
+    formaPulso(s, G);
+  }
+
+  // Forma do pulso (|resposta| a um eco isolado, em função da distância): serve para ignorar os "lóbulos laterais"
+  // do eco direto, que de outra forma pareceriam objetos a 10–25 cm.
+  function formaPulso(s, G) {
+    const { N, D, tmag, peso } = s, re = new Float64Array(N), im = new Float64Array(N);
+    for (let k = 1; k < N / 2; k++) re[k] = peso[k] * tmag[k] * (G ? G[k] : tmag[k]);
+    fft(re, im, true);
+    const n = Math.ceil(0.8 / s.dr), f = new Float64Array(n); let m = 0;
+    for (let r = 0; r < n; r++) { f[r] = Math.hypot(re[(r * D) % N], im[(r * D) % N]); if (f[r] > m) m = f[r]; }
+    for (let r = 0; r < n; r++) f[r] /= m || 1;
+    // envoltória decrescente: cada ponto vale pelo menos o maior que vem depois (cobre os nulos entre lóbulos)
+    for (let r = n - 2; r >= 0; r--) f[r] = Math.max(f[r], f[r + 1]);
+    s.forma = f;
   }
 
   // Um bloco de N amostras do microfone → perfil complexo de distância (R faixas de ~1 cm)
   function perfil(s, bloco, R, pre, pim) {
-    const { N, re, im } = s;
+    const { N, re, im } = s, H = N / 2 + 1;
     let pico = 0;
     for (let i = 0; i < N; i++) { const v = bloco[i]; re[i] = v; im[i] = 0; const a = v < 0 ? -v : v; if (a > pico) pico = a; }
     s.pico = s.pico * 0.9 + pico * 0.1; s.clip = pico > 0.97 ? s.clip + 1 : Math.max(0, s.clip - 0.2);
     fft(re, im, false);
+    // espectro médio recebido (dominado pelo eco direto): base da equalização
+    const ap = s.nPy < 20 ? 1 / (s.nPy + 1) : 0.05; s.nPy++;
+    for (let k = 1; k < H; k++) s.Py[k] += ap * (re[k] * re[k] + im[k] * im[k] - s.Py[k]);
+    s.nq++;
+    if (s.nq === 12 || s.nq === 24 || s.nq === 36) equalizar(s);
     for (let k = 0; k < N; k++) {
-      if (s.mask[k]) { const xr = re[k], xi = im[k]; re[k] = 2 * (xr * s.cr[k] + xi * s.ci[k]); im[k] = 2 * (xi * s.cr[k] - xr * s.ci[k]); }
+      const w = s.peso[k];
+      if (w) { const xr = re[k], xi = im[k]; re[k] = w * (xr * s.cr[k] + xi * s.ci[k]); im[k] = w * (xi * s.cr[k] - xr * s.ci[k]); }
       else { re[k] = 0; im[k] = 0; }
     }
     fft(re, im, true);
@@ -729,10 +851,13 @@ const SonarDSP = (() => {
     }
     s.ruins = 0;
     s.lag = b; s.A0 = s.A0 ? s.A0 * 0.9 + bv * 0.1 : bv;
-    let ru = 0; for (let k = 0; k < 96; k++) { const i = (b + (N >> 1) - 400 + k * 8) % N; ru += Math.hypot(re[i], im[i]); }
+    const inv = 1 / (s.A0 || 1);
+    // ruído: região do perfil além de ~6 m (o chirp seguinte ainda não chegou e quase nada ecoa de tão longe)
+    let ru = 0, rp = 0; for (let k = 0; k < 96; k++) { const i = (b + (N >> 1) - 400 + k * 8) % N, m = Math.hypot(re[i], im[i]); ru += m; rp += m * m; }
     const snr = bv > 0 ? clampSnr(20 * Math.log10(bv / Math.max(ru / 96, 1e-9))) : 0; s.snr = s.snr ? s.snr * 0.9 + snr * 0.1 : snr;
+    const rpn = rp / 96 * inv * inv; s.ruidoPot = s.ruidoPot ? s.ruidoPot * 0.95 + rpn * 0.05 : rpn;
     // referência de fase = o próprio caminho direto: cancela a deriva do relógio de áudio
-    const ur = re[b] / (bv || 1), ui = -im[b] / (bv || 1), inv = 1 / (s.A0 || 1);
+    const ur = re[b] / (bv || 1), ui = -im[b] / (bv || 1);
     for (let r = 0; r < R; r++) {
       const i = (s.lag + r * s.D) % N;
       pre[r] = (re[i] * ur - im[i] * ui) * inv; pim[r] = (re[i] * ui + im[i] * ur) * inv;
@@ -740,9 +865,34 @@ const SonarDSP = (() => {
     // meia-largura do pulso (onde o eco direto cai a 50%): usada para medir pela borda de chegada
     for (let k = 1; k < 40; k++) {
       const i = (s.lag + k) % N, v = Math.hypot(re[i], im[i]) / (bv || 1);
-      if (v < 0.5) { const j = (s.lag + k - 1) % N, u = Math.hypot(re[j], im[j]) / (bv || 1); const m = (k - 1 + (u - 0.5) / (u - v || 1)) * C / (2 * s.fs); s.meia = s.meia ? s.meia * 0.95 + m * 0.05 : m; break; }
+      if (v < 0.5) { const j = (s.lag + k - 1) % N, u = Math.hypot(re[j], im[j]) / (bv || 1); const m = (k - 1 + (u - 0.5) / (u - v || 1)) * C / (2 * s.fs); s.meia = s.meia ? s.meia * 0.9 + m * 0.1 : m; break; }
     }
-    return true;
+    return s.nq >= 40;                                // o filtro só fica fixo depois de ~1,7 s
+  }
+
+  // Teste de faixas: com o chirp largo (sonda), quanto de cada faixa candidata chega limpo no microfone
+  function avaliarBandas(s, bandas) {
+    if (!s.snrEsp) equalizar(s);
+    const { N, fs } = s, snr = s.snrEsp, out = {};
+    for (const [id, b] of Object.entries(bandas)) {
+      const k0 = Math.ceil(b.f0 / (fs / N)), k1 = Math.min(Math.floor(Math.min(b.f1, fs * 0.47) / (fs / N)), N / 2 - 1);
+      let bom = 0, n = 0; const db = [];
+      for (let k = k0; k <= k1; k++) { n++; const v = 10 * Math.log10(Math.max(snr[k], 1e-6)); db.push(v); if (v >= 10) bom++; }
+      db.sort((x, y) => x - y);
+      out[id] = { util: n ? bom / n : 0, hz: bom * fs / N, med: db.length ? db[db.length >> 1] : -60 };
+    }
+    return out;
+  }
+  // Curva de resposta (dB acima do ruído) em pontos de 0 a fs/2, para o gráfico
+  function curvaResposta(s, pontos = 96) {
+    if (!s.snrEsp) return null;
+    const H = s.N / 2 + 1, out = new Float64Array(pontos);
+    for (let p = 0; p < pontos; p++) {
+      const k0 = Math.floor(p / pontos * H), k1 = Math.max(k0 + 1, Math.floor((p + 1) / pontos * H));
+      let m = 0; for (let k = k0; k < k1; k++) m = Math.max(m, s.snrEsp[k] || 0);
+      out[p] = 10 * Math.log10(Math.max(m, 1e-6));
+    }
+    return out;
   }
 
   // ---- Processamento comum (áudio real e demonstração) ----
@@ -810,18 +960,23 @@ const SonarDSP = (() => {
   }
 
   // ---- Perfil estático: o que está parado à frente (paredes, móveis, objetos) ----
-  function estatico(pr, pre, pim) {
-    if (!pr.est || pr.est.length !== pr.R) { pr.est = new Float64Array(pr.R); pr.estB = new Float64Array(pr.R); pr.nEst = 0; }
-    const a = pr.nEst++ ? 0.25 : 1;
+  // Média de potência (≈ 0,4 s) com o ruído descontado: um eco fraco de parede longe não some no piso de ruído.
+  function estatico(pr, pre, pim, sig2) {
+    if (!pr.est || pr.est.length !== pr.R) { pr.est = new Float64Array(pr.R); pr.estB = new Float64Array(pr.R); pr.estP = new Float64Array(pr.R); pr.nEst = 0; }
+    const a = pr.nEst < 8 ? 1 / (pr.nEst + 1) : 0.1; pr.nEst++;
+    if (sig2 > 0) pr.sig2 = pr.sig2 ? pr.sig2 * 0.95 + sig2 * 0.05 : sig2;
+    const s2 = pr.sig2 || 0;
     for (let r = 0; r < pr.R; r++) {
-      pr.estB[r] += a * (Math.hypot(pre[r], pim[r]) - pr.estB[r]);
+      pr.estP[r] += a * (pre[r] * pre[r] + pim[r] * pim[r] - pr.estP[r]);
+      pr.estB[r] = Math.sqrt(Math.max(pr.estP[r] - s2, 0));
       pr.est[r] = pr.estB[r] * ganho(r * pr.dr);
     }
     if (pr.nEst % 8 === 1) {                          // onde a cauda do eco direto termina
-      const B = pr.estB, piso = mediana(B, Math.floor(pr.R / 2)), lim = Math.max(piso * 6, 0.004), meia = pr.meia || 0.04;
+      const B = pr.estB, sig = Math.sqrt(s2), lim = Math.max(sig * 6, mediana(B, Math.floor(pr.R / 2)) * 6, 0.002), meia = pr.meia || 0.04;
       let r = Math.ceil(Math.max(0.1, meia * 1.6) / pr.dr);
-      while (r < pr.R - 3 && !(B[r] < lim && B[r + 1] < lim && B[r + 2] < lim) && r * pr.dr < 0.6) r++;
-      const z = Math.min(Math.max(r * pr.dr, 0.12), 0.6);
+      // a cauda só decai: se o perfil volta a subir, já é um eco de verdade (mesa, parede perto) e a zona morta acaba ali
+      while (r < pr.R - 3 && !(B[r] < lim && B[r + 1] < lim && B[r + 2] < lim) && !(B[r + 1] > B[r] * 1.1 && B[r + 2] > B[r + 1] * 1.1) && r * pr.dr < 0.45) r++;
+      const z = Math.min(Math.max(r * pr.dr, 0.12), 0.45);
       pr.zona = pr.zona ? (z > pr.zona ? z : pr.zona * 0.8 + z * 0.2) : z;
     }
     return pr.est;
@@ -841,34 +996,108 @@ const SonarDSP = (() => {
     for (const p of achados) if (!fin.some(q => Math.abs(q.d - p.d) < sepMin)) fin.push(p);
     return fin.slice(0, max).sort((x, y) => x.d - y.d);
   }
-  function mediana(v, r0) {
+  function mediana(v, r0 = 0) {
     const a = Array.prototype.slice.call(v, r0).sort((x, y) => x - y);
     return a[Math.floor(a.length / 2)] || 1e-9;
   }
-  function trena(pr, zonaMorta) {
-    const v = pr.est; if (!v) return null;
+  const B0 = pr => Math.max(pr.estB[0], pr.estB[1] || 0, 1e-9);
+  // Trena: todos os ecos parados + o "alvo" escolhido.
+  //  modo 'auto'  → a superfície que mais ecoa à frente (compensando a distância), com histerese
+  //  modo 'perto' → o eco firme mais próximo
+  //  trava (m)    → segue o eco escolhido pelo usuário
+  // O valor do alvo é a mediana do último ~1,3 s, com a dispersão (±) como medida de confiança.
+  function trena(pr, zonaMorta, opt = {}) {
+    const v = pr.estB; if (!v) return null;
     if (zonaMorta == null) zonaMorta = pr.zona || 0.18;
-    const r0 = Math.ceil(zonaMorta / pr.dr), piso = mediana(v, r0);
+    const r0 = Math.ceil(zonaMorta / pr.dr), sig = Math.sqrt(pr.sig2 || 0) || mediana(v, r0) || 1e-9;
     const sepMin = Math.max(0.035, (pr.meia || 0.075) * 0.95);
-    const ps = picos(v, r0, pr.R, pr.dr, piso * 4, 6, sepMin);
-    if (!ps.length) return { pontos: [], perto: null, piso };
-    const maxA = Math.max(...ps.map(p => p.amp)), B = pr.estB, meia = pr.meia || 0.04;
-    const pontos = ps.map(p => {
+    let ps = picos(v, r0, pr.R, pr.dr, sig * 4, 8, sepMin);
+    if (pr.forma) {                                   // descarta o que é só lóbulo lateral do eco direto (≥ 8 dB acima)
+      const F = pr.forma, A = B0(pr);
+      ps = ps.filter(p => { const r = Math.round(p.d / pr.dr); return r >= F.length || p.amp > F[r] * A * 2.5; });
+    }
+    const B = pr.estB, meia = pr.meia || 0.04;
+    let pontos = ps.map(p => {
       // borda de chegada: onde o eco sobe a 50% do pico (+ meia-largura do pulso) = ponto mais próximo do objeto
       let r = Math.round(p.d / pr.dr), d = p.d;
-      const topo = B[r], alvo = topo * 0.5;
-      while (r > r0 && B[r - 1] > alvo && p.d - (r - 1) * pr.dr < 0.6) r--;
-      if (r > r0) { const a = B[r - 1], b = B[r]; d = Math.min(p.d, (r - 1 + (alvo - a) / (b - a || 1)) * pr.dr + meia); }
-      return { d, amp: p.amp, rel: p.amp / maxA, db: 20 * Math.log10(p.amp / piso) };
+      const alvo = B[r] * 0.5;
+      while (r > r0 && B[r - 1] > alvo && p.d - (r - 1) * pr.dr < meia * 2.5) r--;
+      // só vale a borda se ela estiver colada ao pico (senão é outro eco encostado: usa o próprio pico)
+      if (r > r0 && B[r - 1] <= alvo) { const a = B[r - 1], b = B[r]; d = Math.min(p.d, (r - 1 + (alvo - a) / (b - a || 1)) * pr.dr + meia); }
+      d += DIRETO;
+      return { d, amp: p.amp, db: 20 * Math.log10(p.amp / sig), nota: 20 * Math.log10(p.amp * Math.sqrt(Math.max(p.d, 0.3))) };
     });
     pontos.sort((x, y) => x.d - y.d);                 // ecos colados: fica a borda mais próxima, com a força do maior
     const unicos = [];
     for (const p of pontos) {
       const q = unicos.find(u => Math.abs(u.d - p.d) < sepMin);
-      if (q) { if (p.amp > q.amp) { q.amp = p.amp; q.rel = p.rel; q.db = p.db; } } else unicos.push({ ...p });
+      if (q) { if (p.amp > q.amp) { q.amp = p.amp; q.db = p.db; q.nota = p.nota; } } else unicos.push({ ...p });
     }
-    return { pontos: unicos, perto: unicos.find(p => p.db >= 14) || null, piso, zona: zonaMorta };
+    pontos = unicos;
+    const gmax = Math.max(1e-12, ...pontos.map(p => p.amp * ganho(p.d)));
+    for (const p of pontos) p.rel = p.amp * ganho(p.d) / gmax;
+    const perto = pontos.find(p => p.db >= 14) || null;
+    // escolha do alvo
+    const T = pr.trEst || (pr.trEst = { hist: [], d: null, novo: 0, ultimo: null });
+    let esc = null;
+    if (opt.trava != null) {
+      let md = opt.tolTrava || 0.08; for (const p of pontos) { const e = Math.abs(p.d - opt.trava); if (e < md) { md = e; esc = p; } }
+    } else if (opt.modo === 'perto') esc = perto;
+    else {
+      let mn = -1e9;
+      for (const p of pontos) {
+        if (p.db < 12) continue;
+        const n = p.nota + (T.d != null && Math.abs(p.d - T.d) < 0.06 ? 4 : 0);
+        if (n > mn) { mn = n; esc = p; }
+      }
+    }
+    if (esc) {
+      if (T.d != null && Math.abs(esc.d - T.d) > 0.06) { if (++T.novo >= 3) { T.hist = []; T.novo = 0; } }
+      else T.novo = 0;
+      if (!T.novo) { T.hist.push(esc.d); if (T.hist.length > (opt.janela || 14)) T.hist.shift(); }
+      const o = T.hist.slice().sort((x, y) => x - y), n = o.length;
+      T.d = n ? o[n >> 1] : esc.d;
+      const q1 = o[Math.floor(n * 0.25)], q3 = o[Math.min(n - 1, Math.floor(n * 0.75))];
+      T.ultimo = { d: T.d, bruto: esc.d, db: esc.db, mais: n >= 4 ? Math.max((q3 - q1) / 1.35, 0.002) : null, n, ponto: esc };
+      T.perdido = 0;
+    } else if (T.ultimo && ++T.perdido > 6) { T.ultimo = null; T.d = opt.trava != null ? opt.trava : null; T.hist = []; }
+    const alvo = T.ultimo && (esc || T.perdido <= 6) ? T.ultimo : null;
+    if (pr.trMov) pr.trMov.push({ est: pontos.filter(p => p.db >= 12).map(p => p.d), mov: (opt.mov || []).map(a => a.d + DIRETO) });
+    return { pontos, perto, alvo, piso: sig, zona: zonaMorta };
   }
+  // "Achar pelo movimento": enquanto o usuário vai e volta com o aparelho, só o eco do alvo muda de distância
+  // (piso, teto e o próprio corpo ficam onde estão). Junta os ecos em trilhas e devolve a que mais andou.
+  function trenaMovInicio(pr) { pr.trMov = []; }
+  function trenaMovFim(pr) {
+    const L = pr.trMov || []; pr.trMov = null;
+    if (L.length < 6) return null;
+    const trilhas = lista => {
+      const tr = [];
+      for (let i = 0; i < lista.length; i++) for (const d of lista[i]) {
+        let m = null, md = 0.07;
+        for (const t of tr) if (t.fim >= i - 3 && t.fim !== i) { const e = Math.abs(t.ult - d); if (e < md) { md = e; m = t; } }
+        if (m) { m.ds.push(d); m.ult = d; m.fim = i; } else tr.push({ ds: [d], ult: d, fim: i });
+      }
+      return tr;
+    };
+    const melhor = (tr, minFrac) => {
+      const cs = [];
+      for (const t of tr) {
+        if (t.ds.length < L.length * minFrac) continue;
+        const v = t.ds.slice().sort((x, y) => x - y), span = v[Math.floor(v.length * 0.9)] - v[Math.floor(v.length * 0.1)];
+        if (span >= 0.03 && span < 0.6) cs.push({ span, d: v[v.length >> 1], ult: t.ult, nota: span * Math.sqrt(t.ds.length), n: t.ds.length });
+      }
+      // ecos múltiplos (alvo → aparelho → alvo…) aparecem em 2×, 3× a distância e andam 2×, 3×:
+      // fica a trilha mais próxima entre as que se moveram bem
+      const ok = cs.filter(c => !cs.some(o => o !== c && o.d < c.d && [2, 3].some(k => Math.abs(c.d / o.d - k) < 0.15 * k)));
+      if (!ok.length) return null;
+      const top = Math.max(...ok.map(c => c.nota));
+      return ok.filter(c => c.nota >= top * 0.45).sort((x, y) => x.d - y.d)[0];
+    };
+    // 1º: o que o detector de movimento viu (só o alvo anda quando o aparelho vai e volta); 2º: os ecos parados
+    return melhor(trilhas(L.map(x => x.mov)), 0.3) || melhor(trilhas(L.map(x => x.est)), 0.5);
+  }
+
 
   // ---- Nitidez angular: Richardson–Lucy em cada anel de distância ----
   // grid[a*R + r]: eco medido na direção a; o feixe largo borra cada objeto por vários graus.
@@ -877,28 +1106,35 @@ const SonarDSP = (() => {
     const K = Math.max(1, Math.ceil(sigma * 3)), ker = new Float64Array(2 * K + 1);
     let soma = 0; for (let k = -K; k <= K; k++) { ker[k + K] = Math.exp(-(k * k) / (2 * sigma * sigma)); soma += ker[k + K]; }
     for (let k = 0; k < ker.length; k++) ker[k] /= soma;
-    const conv = (x, y, msk) => { for (let a = 0; a < nA; a++) { let t = 0; for (let k = -K; k <= K; k++) { const b = a + k; if (b >= 0 && b < nA && (!msk || msk[b])) t += x[b] * ker[k + K]; } y[a] = t; } };
-    const out = new Float32Array(grid.length), d = new Float64Array(nA), u = new Float64Array(nA), est = new Float64Array(nA),
-          rat = new Float64Array(nA), cor = new Float64Array(nA), norm = new Float64Array(nA), msk = new Uint8Array(nA), um = new Float64Array(nA).fill(1);
-    let n = 0; for (let a = 0; a < nA; a++) { msk[a] = cont[a] ? 1 : 0; n += msk[a]; }
+    const out = new Float32Array(grid.length);
+    // trabalha só no arco que foi varrido (+ margem do borrão); se a volta foi completa, o eixo é circular
+    let maiorBuraco = 0, fimBuraco = 0, n0 = 0;
+    for (let a = 0; a < 2 * nA; a++) { if (cont[a % nA] >= 0.5) { if (n0 > maiorBuraco) { maiorBuraco = n0; fimBuraco = a % nA; } n0 = 0; } else n0++; }
+    if (n0 >= 2 * nA) return out;
+    const circular = maiorBuraco <= 2 * K, L = circular ? nA : Math.min(nA, nA - maiorBuraco + 2 * K), ini = circular ? 0 : (fimBuraco - K + nA) % nA;
+    const idx = new Int32Array(L); for (let i = 0; i < L; i++) idx[i] = (ini + i) % nA;
+    const conv = (x, y, msk) => { for (let a = 0; a < L; a++) { let t = 0; for (let k = -K; k <= K; k++) { let b = a + k; if (circular) b = (b + L) % L; else if (b < 0 || b >= L) continue; if (!msk || msk[b]) t += x[b] * ker[k + K]; } y[a] = t; } };
+    const d = new Float64Array(L), u = new Float64Array(L), est = new Float64Array(L),
+          rat = new Float64Array(L), cor = new Float64Array(L), norm = new Float64Array(L), msk = new Uint8Array(L), um = new Float64Array(L).fill(1);
+    let n = 0; for (let i = 0; i < L; i++) { msk[i] = cont[idx[i]] >= 0.5 ? 1 : 0; n += msk[i]; }
     if (!n) return out;
     conv(um, norm, msk);                                  // quanto de cada direção foi de fato observado
     for (let r = r0; r < R; r++) {
       // tira o piso (20% mais baixos) do anel: o algoritmo trabalha só com o que é eco de verdade
-      const vals = []; for (let a = 0; a < nA; a++) if (msk[a]) vals.push(grid[a * R + r]);
+      const vals = []; for (let i = 0; i < L; i++) if (msk[i]) vals.push(grid[idx[i] * R + r]);
       vals.sort((x, y) => x - y);
       const piso = vals[Math.floor(vals.length * 0.2)], topo = vals[vals.length - 1];
-      if (topo - piso <= minSinal) { for (let a = 0; a < nA; a++) out[a * R + r] = msk[a] ? grid[a * R + r] - piso : 0; continue; }
-      let md = 0; for (let a = 0; a < nA; a++) { d[a] = msk[a] ? Math.max(grid[a * R + r] - piso, 0) + 1e-3 : 0; md += d[a]; }
+      if (topo - piso <= minSinal) { for (let i = 0; i < L; i++) out[idx[i] * R + r] = msk[i] ? Math.max(grid[idx[i] * R + r] - piso, 0) : 0; continue; }
+      let md = 0; for (let i = 0; i < L; i++) { d[i] = msk[i] ? Math.max(grid[idx[i] * R + r] - piso, 0) + 1e-3 : 0; md += d[i]; }
       md /= n;
-      for (let a = 0; a < nA; a++) u[a] = md;
+      for (let i = 0; i < L; i++) u[i] = md;
       for (let it = 0; it < iters; it++) {
         conv(u, est, null);
-        for (let a = 0; a < nA; a++) rat[a] = msk[a] ? d[a] / Math.max(est[a], 1e-9) : 0;
+        for (let i = 0; i < L; i++) rat[i] = msk[i] ? d[i] / Math.max(est[i], 1e-9) : 0;
         conv(rat, cor, null);
-        for (let a = 0; a < nA; a++) u[a] *= norm[a] > 1e-6 ? cor[a] / norm[a] : 1;
+        for (let i = 0; i < L; i++) u[i] *= norm[i] > 1e-6 ? cor[i] / norm[i] : 1;
       }
-      for (let a = 0; a < nA; a++) out[a * R + r] = u[a];
+      for (let i = 0; i < L; i++) out[idx[i] * R + r] = u[i];
     }
     return out;
   }
@@ -951,6 +1187,9 @@ const SonarDSP = (() => {
     for (let x = 0.30; x <= 0.62; x += 0.04) cena.push({ x, y: 0.95, a: 0.007, ph: fase() });                  // caixa de ~30 cm
     for (let k = 0; k < 12; k++) { const t = k / 12 * 6.283; cena.push({ x: -0.8 + 0.09 * Math.cos(t), y: 1.45 + 0.09 * Math.sin(t), a: 0.005, ph: fase() }); } // coluna
     for (let k = 0; k < 8; k++) { const t = k / 8 * 6.283; cena.push({ x: 0.0 + 0.06 * Math.cos(t), y: 1.02 + 0.06 * Math.sin(t), a: 0.006, ph: fase() }); }   // vaso em frente, ao lado da caixa
+    for (let x = -3; x <= 2.401; x += 0.05) cena.push({ x, y: -1.6, a: 0.004, ph: fase() });                     // parede de trás
+    for (let y = -1.6; y <= 2.2; y += 0.05) cena.push({ x: 2.4, y, a: 0.004, ph: fase() });                       // parede da direita
+    for (let x = -1.15; x <= -0.65; x += 0.04) cena.push({ x, y: -0.75, a: 0.006, ph: fase() });                 // sofá atrás, à esquerda
     return { t: 0, R, dr, fps: 48000 / 2048, lambda: C / 19000, cena };
   }
   function somaEco(dm, pre, pim, d, amp, ph) {
@@ -966,7 +1205,9 @@ const SonarDSP = (() => {
     const t = dm.t, th = ang * Math.PI / 180;
     pre.fill(0); pim.fill(0);
     for (const p of dm.cena) {
-      const d = Math.hypot(p.x, p.y), b = Math.exp(-(((Math.atan2(p.x, p.y) - th) / 0.42) ** 2));
+      const py = p.y - (dm.vaivem || 0);                // "vai e vem" do aparelho (para o Achar o alvo)
+      let da = Math.atan2(p.x, py) - th; da = Math.atan2(Math.sin(da), Math.cos(da));
+      const d = Math.hypot(p.x, py), b = Math.exp(-((da / 0.42) ** 2));
       if (b > 0.02) somaEco(dm, pre, pim, d, p.a * b / Math.max(d, 0.3) ** 2, p.ph);
     }
     if (pessoas) {
@@ -978,7 +1219,7 @@ const SonarDSP = (() => {
     for (let r = 0; r < dm.R; r++) { pre[r] += (Math.random() - 0.5) * 0.0012; pim[r] += (Math.random() - 0.5) * 0.0012; }
   }
 
-  return { fft, criar, perfil, criarProcessador, processar, iniciarCalibracao, respiracao, criarDemo, passoDemo, estatico, picos, trena, mediana, ganho, deconvAngular, C };
+  return { fft, criar, ruido, equalizar, perfil, avaliarBandas, curvaResposta, criarProcessador, processar, iniciarCalibracao, respiracao, criarDemo, passoDemo, estatico, picos, trena, trenaMovInicio, trenaMovFim, mediana, ganho, deconvAngular, C };
 })();
 
 
@@ -1098,6 +1339,126 @@ const Detetive = (() => {
   return { svg: nome => (poses[nome] || poses.espiando)(), nomes: Object.keys(poses) };
 })();
 
+// ===== Abelha (pixel art): companheira do detetive =====
+const Abelha = (() => {
+  const COR = { Y: '#f8c43c', y: '#ffd968', K: '#231c15', B: '#4a2b1a', W: '#bfdff4', w: '#e2f1fb', E: '#0f0c0a', T: '#cfe6f6' };
+  // de frente: 20 × 17
+  const FRENTE = {
+    corpo: [
+      '.....KK......KK.....',
+      '......K......K......',
+      '......K......K......',
+      '.....YYYYYYYYYY.....',
+      '....YYYYYYYYYYYY....',
+      '....YKKKYYYYKKKY....',
+      '....YKKKYYYYKKKY....',
+      '....YYYYYYYYYYYY....',
+      '....YYYYKYYKYYYY....',
+      '....YYYYYKKYYYYY....',
+      '....KKKKKKKKKKKK....',
+      '....KKKKKKKKKKKK....',
+      '....YYYYYYYYYYYY....',
+      '....KKKKKKKKKKKK....',
+      '....KKKKKKKKKKKK....',
+      '.....YYYYYYYYYY.....',
+      '......KK....KK......',
+      '......KK....KK......'],
+    asaE: [
+      '', '', '', '', '', '',
+      '.ww.................',
+      'wWWW................',
+      'WWWW................',
+      'WWWW................',
+      '.WWW................',
+      '..WW................',
+      '...W................'],
+    asaD: [
+      '', '', '', '', '', '',
+      '.................ww.',
+      '................WWWw',
+      '................WWWW',
+      '................WWWW',
+      '................WWW.',
+      '................WW..',
+      '................W...'],
+  };
+  // de lado (voando para a direita): 26 × 14
+  const LADO = {
+    corpo: [
+      '', '', '',
+      '.....................KK.KK',
+      '....................K..K..',
+      '....................K..K..',
+      '..................YYYYYY..',
+      '......YYYBBYYBBYYYYYYYYY..',
+      '......YYYBBYYBBYYYYYYEEYY.',
+      'BBBBBYYYYBBYYBBYYYYYYEEYY.',
+      '...BBYYYYBBYYBBYYYYYYYYY..',
+      '......YYYBBYYBBYYYYYYY....',
+      '........B....B............',
+      '.......B....B.............'],
+    asaE: [
+      '..........wwwww...........',
+      '.........wWWWWWW..........',
+      '.....www.WWWWWWWW.........',
+      '....wWWWW.WWWWWWW.........',
+      '....WWWWWW.WWWWWW.........',
+      '.....WWWWWWWWWWWW.........',
+      '.......WWWWWWWW...........'],
+    asaD: [],
+  };
+  const rects = (linhas, dx = 0) => {
+    let s = '';
+    linhas.forEach((l, y) => { for (let x = 0; x < l.length; x++) { const c = l[x]; if (c !== '.' && COR[c]) s += `<rect x="${x + dx}" y="${y}" width="1.02" height="1.02" fill="${COR[c]}"/>`; } });
+    return s;
+  };
+  function svg(vista = 'frente') {
+    const V = vista === 'lado' ? LADO : FRENTE, w = vista === 'lado' ? 26 : 20, h = vista === 'lado' ? 14 : 18;
+    const rastro = vista === 'lado' ? '<g class="ab-rastro"><rect x="-6" y="8" width="4" height="1" fill="#cfe6f6"/><rect x="-4" y="10" width="3" height="1" fill="#cfe6f6"/><rect x="-7" y="11.5" width="3" height="1" fill="#cfe6f6"/></g>' : '';
+    return `<svg viewBox="${vista === 'lado' ? -8 : 0} 0 ${w + (vista === 'lado' ? 8 : 0)} ${h}" shape-rendering="crispEdges" class="abelha-svg ${vista}" aria-hidden="true">${rastro}`
+      + `<g class="ab-asa ab-asa-e">${rects(V.asaE)}</g><g class="ab-asa ab-asa-d">${rects(V.asaD)}</g><g class="ab-corpo">${rects(V.corpo)}</g></svg>`;
+  }
+  // sprite para o canvas do radar (de frente, 2 quadros de asa)
+  function desenhar(g, x, y, px, fase) {
+    const V = FRENTE, asa = fase ? 1 : 0;
+    const pinta = (linhas, enc) => linhas.forEach((l, j) => { for (let i = 0; i < l.length; i++) { const c = l[i]; if (c === '.' || !COR[c]) continue;
+      const yy = enc && asa ? j + 1 : j; g.fillStyle = COR[c]; g.fillRect(Math.round(x + (i - 10) * px), Math.round(y + (yy - 9) * px), Math.ceil(px), Math.ceil(px)); } });
+    pinta(V.asaE, true); pinta(V.asaD, true); pinta(V.corpo, false);
+  }
+  return { svg, desenhar };
+})();
+
+// ===== Colmeia (pixel art) pendurada num galho =====
+const Colmeia = (() => {
+  const COR = { G: '#7ea13a', g: '#97b94b', B: '#6e3f24', Y: '#fcc24a', O: '#ec8f24', D: '#4f2a17' };
+  const ARTE = [
+    '.....GG...........GG..',
+    '.....gGG.........GGg..',
+    '......GGG.......BGG...',
+    '.......BB.....BBB.....',
+    '....BBBBBBBBBBBBBBBBBB',
+    '.GGBBB....B...GG......',
+    'GgGB......B...GgG.....',
+    'GG.......OBO...GG.....',
+    '........YYYYY.........',
+    '.......YYYYYYY........',
+    '.......OOOOOOO........',
+    '......YYYYYYYYY.......',
+    '.....OOOOOOOOOOO......',
+    '......YYYYYYYYY.......',
+    '......OOODDDOOO.......',
+    '.......YYDDDYY........',
+    '........OOOOO.........',
+    '.........OOO..........'];
+  function svg() {
+    let galho = '', colmeia = '';
+    ARTE.forEach((l, y) => { for (let x = 0; x < l.length; x++) { const c = l[x]; if (c === '.') continue;
+      const r = `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${COR[c]}"/>`; if (y >= 7 && 'YOD'.includes(c)) colmeia += r; else galho += r; } });
+    return `<svg viewBox="0 0 22 18" shape-rendering="crispEdges" aria-hidden="true"><g class="cm-galho">${galho}</g><g class="cm-colmeia">${colmeia}</g></svg>`;
+  }
+  return { svg };
+})();
+
 </script>
 <script>
 'use strict';
@@ -1115,9 +1476,30 @@ function reagir(nome, texto, chave = nome, espera = 5000, dur = 3600) {
   if (REACAO.chaves[chave] && agora - REACAO.chaves[chave] < espera) return;
   REACAO.chaves[chave] = agora;
   pose($('reacaoArte'), nome); $('reacaoTxt').textContent = texto;
+  if (nome === 'comemorando') voarAbelha();
   const r = $('reacao'); r.classList.add('on'); clearTimeout(REACAO.timer); REACAO.timer = setTimeout(() => r.classList.remove('on'), dur);
 }
 document.getElementById('reacao').onclick = () => document.getElementById('reacao').classList.remove('on');
+// A abelha: paira no topo e na tela do sonar, comemora junto e atravessa a tela nas boas notícias
+document.querySelectorAll('.colmeia').forEach(el => {
+  let h = Colmeia.svg();
+  if (el.dataset.abelhas) h += '<span class="orbita"><span class="abelha"></span></span>';      // no máximo uma abelha por lugar
+  el.innerHTML = h;
+});
+document.querySelectorAll('.abelha').forEach(el => { el.innerHTML = Abelha.svg('frente'); });
+let abelhaVoando = -1e9;
+function voarAbelha() {
+  if (performance.now() - abelhaVoando < 3500 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  abelhaVoando = performance.now();
+  const v = document.createElement('div'); v.className = 'abelha-voo';
+  const y0 = 80 + Math.random() * (innerHeight * 0.45), y1 = y0 + (Math.random() - 0.5) * 160;
+  v.style.setProperty('--y0', y0 + 'px'); v.style.setProperty('--y1', y1 + 'px');
+  v.innerHTML = '<span class="abelha">' + Abelha.svg('lado') + '</span>';
+  document.body.appendChild(v); setTimeout(() => v.remove(), 3400);
+  const topo = document.getElementById('abelhaTopo'); topo.style.visibility = 'hidden';
+  setTimeout(() => { topo.style.visibility = ''; topo.classList.remove('paira'); topo.classList.add('feliz'); }, 3300);
+  setTimeout(() => { topo.classList.remove('feliz'); topo.classList.add('paira'); }, 5100);
+}
 const servidoPeloSensor = location.protocol === 'http:' && /^(\d+\.){3}\d+$|^localhost$|\.local$/.test(location.hostname);
 
 // ---------- Cores ----------
@@ -1741,17 +2123,27 @@ try { const salvo = localStorage.getItem(CHAVE); if (salvo) { $('gravTexto').val
 const SON = { ativo: false, demo: false, ctx: null, stream: null, src: null, gain: null, no: null, dsp: null, pr: null, dm: null,
               R: 0, alc: 3, k: 4.5, vol: 0.7, fila: null, filaLen: 0, pre: null, pim: null, ultimo: null, resp: null,
               wf: null, wfCtx: null, wfCol: null, quadros: 0, contagem: [], acum: 0,
-              banda: 0, teste: null, trava: null, mic: '',
-              visao: 'eco', temp: 25, escala: 1, off: 0, trilha: [], trena: null };
+              banda: 0, tela: null, mic: '',
+              visao: 'eco', temp: 25, escala: 1, off: 0, trilha: [], trena: null,
+              fase: 'ok', alvoModo: 'auto', trava: null, achar: null, curva: null, resBandas: null, casc: null, cascCtx: null };
 const realD = d => d * SON.escala + SON.off;                       // distância medida → distância real (temperatura + ajuste)
 const C_TEMP = t => (331.3 + 0.606 * t) / 343;
 SON.escala = C_TEMP(25);
 try { const aj = JSON.parse(localStorage.getItem('csl-ajuste-trena') || 'null'); if (aj) { SON.temp = aj.temp; SON.escala = C_TEMP(aj.temp); SON.off = aj.off || 0; } } catch (e) {}
 function salvarAjuste() { try { localStorage.setItem('csl-ajuste-trena', JSON.stringify({ temp: SON.temp, off: SON.off })); } catch (e) {} }
-const SCAN = { ativo: false, a0: null, ang: 0, temGiro: false, ouvindo: false, aMax: 70, nA: 71, grid: null, cont: null, piso: 1, formas: [], img: null, imgT: 0, formasT: 0,
-               nitida: null, nitidez: true, sigma: 17, vel: 0, ultAng: 0, ultT: 0, rapido: 0 };
+const SCAN = { ativo: false, a0: null, ang: 0, temGiro: false, ouvindo: false, aMax: 180, nA: 180, grid: null, cont: null, piso: 1, formas: [], img: null, imgT: 0, formasT: 0,
+               nitida: null, nitidez: true, sigma: 17, vel: 0, ultAng: 0, ultT: 0, rapido: 0, hist: [], tUlt: null, inverter: false, circulo: false };
+const binDe = ang => { const p = (ang + 180) / 2; return ((Math.round(p) % 180) + 180) % 180; };
+const angDe = a => a * 2 - 180;
+const visto = a => SCAN.cont && SCAN.cont[(a + SCAN.nA) % SCAN.nA] >= 0.5;
 const BANDAS = { 1: { f0: 17500, f1: 20500, nome: 'Discreta 17,5–20,5 kHz' }, 2: { f0: 14500, f1: 17500, nome: 'Forte 14,5–17,5 kHz' },
-                 3: { f0: 14000, f1: 20500, nome: 'Precisa 14–20,5 kHz' } };
+                 3: { f0: 14000, f1: 20500, nome: 'Precisa 14–20,5 kHz' }, 4: { f0: 8000, f1: 16000, nome: 'Ampla 8–16 kHz' } };
+// Auto: a faixa com mais largura útil (acima de 10 dB), penalizando a Ampla (bem audível) e faixas com pouco sinal
+function escolherBanda(res) {
+  let m = 1, ms = -1;
+  for (const [id, r] of Object.entries(res)) { const sc = r.hz * (id === '4' ? 0.55 : 1) * (r.med >= 15 ? 1 : 0.4); if (sc > ms) { ms = sc; m = Number(id); } }
+  return m;
+}
 const WF_COLS = 360;
 const WORKLET = `class Coletor extends AudioWorkletProcessor { constructor(){ super(); this.b = new Float32Array(1024); this.n = 0; }
   process(inp){ const c = inp[0] && inp[0][0]; if (c) { for (let i = 0; i < c.length; i++) { this.b[this.n++] = c[i]; if (this.n === 1024) { this.port.postMessage(this.b.slice(0)); this.n = 0; } } } return true; } }
@@ -1766,6 +2158,9 @@ function sonMontar() {        // (re)cria processador e ecograma para o alcance 
   SON.wf = document.createElement('canvas'); SON.wf.width = WF_COLS; SON.wf.height = SON.R;
   SON.wfCtx = SON.wf.getContext('2d'); SON.wfCtx.fillStyle = '#fbfaf4'; SON.wfCtx.fillRect(0, 0, WF_COLS, SON.R);
   SON.wfCol = SON.wfCtx.createImageData(1, SON.R);
+  SON.casc = document.createElement('canvas'); SON.casc.width = 240; SON.casc.height = 96;        // cascata da trena: distância × tempo
+  SON.cascCtx = SON.casc.getContext('2d'); SON.cascCtx.fillStyle = '#fbfaf4'; SON.cascCtx.fillRect(0, 0, 240, 96);
+  SON.cascLin = SON.cascCtx.createImageData(240, 1); SON.trava = null; SON.achar = null;
   if (SON.demo) SON.dm = SonarDSP.criarDemo(SON.R, dr);
   SON.ultimo = null; SON.resp = null; SON.trena = null; SON.trk = null;
   if (!SCAN.grid || SCAN.grid.length !== SCAN.nA * SON.R) scanZerar();
@@ -1787,18 +2182,67 @@ function sonQuadro() {
   if (SON.quadros % Math.round(pr.fps) === 0 && !o.calibrando) SON.resp = SonarDSP.respiracao(pr);
   // trena (coisas paradas) e velocidade de quem se move
   pr.meia = SON.demo ? 0.0375 : (SON.dsp && SON.dsp.meia) || 0.04;
-  SonarDSP.estatico(pr, SON.pre, SON.pim);
-  if (SON.quadros % 3 === 0) SON.trena = SonarDSP.trena(pr);
+  pr.forma = SON.demo ? null : SON.dsp && SON.dsp.forma;
+  SonarDSP.estatico(pr, SON.pre, SON.pim, SON.demo ? 2.4e-7 : SON.dsp.ruidoPot);
+  if (SON.quadros % 3 === 0) {
+    SON.trena = SonarDSP.trena(pr, null, { modo: SON.alvoModo, trava: SON.trava, mov: o.calibrando ? [] : o.alvos });
+    if (SON.trava != null && SON.trena.alvo) SON.trava = SON.trena.alvo.bruto;      // a trava acompanha o eco devagarinho
+    cascataLinha(); acharPasso();
+  }
   if (!o.calibrando) rastrearSonar(o.alvos || [], performance.now());
-  // varredura: guarda o perfil estático na direção para onde o iPhone aponta
+  // varredura: guarda o perfil estático na direção para onde o iPhone apontava quando o eco foi captado
   if (SCAN.ativo && SCAN.temGiro && SCAN.grid && SCAN.vel > 60) SCAN.rapido++;
   else if (SCAN.ativo && SCAN.temGiro && SCAN.grid) {
-    if (SON.quadros % 10 === 0 || SCAN.piso === 1) SCAN.piso = SonarDSP.mediana(pr.est, Math.ceil(0.18 / pr.dr));
-    const a = Math.round((clamp(SCAN.ang, -SCAN.aMax, SCAN.aMax) + SCAN.aMax) / 2), R = SON.R, base = a * R, inv = 1 / (SCAN.piso || 1e-9);
-    const w = SCAN.cont[a] ? 0.3 : 1;
-    for (let r = 0; r < R; r++) SCAN.grid[base + r] += w * (pr.estB[r] * inv - SCAN.grid[base + r]);
-    SCAN.cont[a]++;
+    SCAN.piso = Math.sqrt(pr.sig2 || 0) || SonarDSP.mediana(pr.estB, Math.ceil(0.3 / pr.dr)) || 1e-9;
+    const ang = SON.demo ? SCAN.ang : anguloEm(performance.now() - SCAN.lat * 1000);
+    const pos = (ang + 180) / 2, a0 = Math.floor(pos), f = pos - a0, R = SON.R, inv = 1 / SCAN.piso, agora = performance.now();
+    for (const [a, w] of [[((a0 % 180) + 180) % 180, 1 - f], [(((a0 + 1) % 180) + 180) % 180, f]]) {
+      if (w < 0.05) continue;
+      SCAN.cont[a] += w;
+      const taxa = w / Math.min(SCAN.cont[a], 6), base = a * R;                  // média dos primeiros, depois média móvel
+      for (let r = 0; r < R; r++) SCAN.grid[base + r] += taxa * (pr.estB[r] * inv - SCAN.grid[base + r]);
+      SCAN.tUlt[a] = agora;
+    }
   }
+}
+// A trena desenha uma "cascata": cada linha é o perfil parado num instante (o mais novo em cima).
+// Quem se mexe com o iPhone (a parede quando você vai e volta) vira uma linha torta; piso e teto ficam retos.
+function cascataLinha() {
+  const pr = SON.pr, c = SON.cascCtx; if (!c || !pr.est) return;
+  c.drawImage(SON.casc, 0, 1);
+  const d = SON.cascLin.data, sig = Math.sqrt(pr.sig2 || 0) || 1e-9;
+  for (let x = 0; x < 240; x++) {
+    const r = Math.min(SON.R - 1, Math.round(x / 239 * (SON.R - 1)));
+    const db = 20 * Math.log10(Math.max(pr.estB[r] * SonarDSP.ganho(r * pr.dr) / sig, 1e-3));
+    const q = clamp((db - 8) / 34, 0, 1), i = (q * 255) | 0, a = LUT[i * 4 + 3] / 255;
+    d[x * 4] = LUT[i * 4] * a + 251 * (1 - a); d[x * 4 + 1] = LUT[i * 4 + 1] * a + 250 * (1 - a); d[x * 4 + 2] = LUT[i * 4 + 2] * a + 244 * (1 - a); d[x * 4 + 3] = 255;
+  }
+  c.putImageData(SON.cascLin, 0, 0);
+}
+// "Achar o alvo": 4 s de vai e vem; o eco que andou junto com o aparelho é o da parede
+function acharIniciar() {
+  if (!(SON.ativo || SON.demo) || !SON.pr || !SON.ultimo || SON.ultimo.calibrando) { $('dAcharTxt').textContent = 'Ligue o sonar e espere terminar a calibração.'; return; }
+  SON.trava = null; SON.pr.trEst = null; SonarDSP.trenaMovInicio(SON.pr);
+  SON.achar = { t0: performance.now() };
+  $('btnAchar').textContent = 'Vá e volte… 4'; $('btnAchar').disabled = true;
+  reagir('trena', 'Vá e volte devagar, uns 10 cm, apontando para o alvo…', 'achar', 1000, 4200);
+}
+function acharPasso() {
+  const A = SON.achar; if (!A) return;
+  const t = (performance.now() - A.t0) / 1000;
+  if (SON.demo) { SON.dm.vaivem = 0.08 * Math.sin(2 * Math.PI * t / 1.6) * Math.sin(Math.PI * Math.min(t / 4, 1)); }
+  if (t < 4) { $('btnAchar').textContent = `Vá e volte… ${Math.ceil(4 - t)}`; return; }
+  const m = SonarDSP.trenaMovFim(SON.pr); SON.achar = null; if (SON.dm) SON.dm.vaivem = 0;
+  $('btnAchar').textContent = 'Achar o alvo'; $('btnAchar').disabled = false;
+  if (m) {
+    SON.trava = m.d; SON.pr.trEst = null; $('btnDestravar').disabled = false;
+    reagir('comemorando', `Achei! O alvo está a ${fmt(realD(m.d), 2)} m. Travei nele.`, 'achou', 1000);
+  } else reagir('confuso', 'Não vi nenhum eco andar junto. Vá e volte de novo, um pouco mais (10–15 cm).', 'achou', 1000);
+  ultimoPainel = 0;
+}
+function travarEm(d) {
+  SON.trava = d; if (SON.pr) SON.pr.trEst = null; $('btnDestravar').disabled = false; ultimoPainel = 0;
+  reagir('trena', `Travado no eco a ${fmt(realD(d), 2)} m.`, 'travar', 800, 2200);
 }
 // Rastreador α-β: segue a pessoa principal entre os quadros, suaviza a distância e estima a velocidade
 function rastrearSonar(alvos, agora) {
@@ -1820,8 +2264,8 @@ function velocidade() { const T = alvoFirme(); return T && T.hits >= 8 ? T.v * S
 
 // ---------- varredura de formas ----------
 function scanZerar() {
-  SCAN.grid = new Float32Array(SCAN.nA * SON.R); SCAN.cont = new Uint16Array(SCAN.nA);
-  SCAN.formas = []; SCAN.a0 = null; SCAN.piso = 1; SCAN.imgT = 0; SCAN.nitida = null; SCAN.rapido = 0; SCAN.vel = 0; SCAN.ultT = 0;
+  SCAN.grid = new Float32Array(SCAN.nA * SON.R); SCAN.cont = new Float32Array(SCAN.nA); SCAN.tUlt = new Float64Array(SCAN.nA);
+  SCAN.formas = []; SCAN.a0 = null; SCAN.piso = 1; SCAN.imgT = 0; SCAN.nitida = null; SCAN.rapido = 0; SCAN.vel = 0; SCAN.ultT = 0; SCAN.hist = []; SCAN.circulo = false;
   $('fLista').innerHTML = '<li class="vazio">Faça uma varredura para começar</li>'; $('fTotal').textContent = '';
 }
 function scanOrientacao(e) {
@@ -1830,18 +2274,30 @@ function scanOrientacao(e) {
   if (h == null || SON.demo) return;
   SCAN.temGiro = true;
   if (SCAN.a0 == null) SCAN.a0 = h;
-  const d = ((h - SCAN.a0 + 540) % 360) - 180;
-  SCAN.ang = SCAN.ang * 0.6 + d * 0.4;
-  scanVelocidade(performance.now());
+  SCAN.ang = ((h - SCAN.a0 + 540) % 360) - 180;
+  const agora = performance.now();
+  SCAN.hist.push({ t: agora, a: SCAN.ang }); while (SCAN.hist.length > 2 && agora - SCAN.hist[0].t > 1500) SCAN.hist.shift();
+  scanVelocidade(agora);
+}
+// O eco que chega agora saiu do alto-falante ~0,1 s atrás (bloco de áudio + latência): usa a direção daquele instante
+function anguloEm(t) {
+  const H = SCAN.hist; if (!H.length) return SCAN.ang;
+  if (t <= H[0].t) return H[0].a;
+  for (let i = H.length - 1; i > 0; i--) if (H[i - 1].t <= t) {
+    const A = H[i - 1], B = H[i], f = (t - A.t) / Math.max(B.t - A.t, 1);
+    let d = B.a - A.a; d = ((d + 540) % 360) - 180;
+    return ((A.a + d * f + 540) % 360) - 180;
+  }
+  return H[H.length - 1].a;
 }
 function scanVelocidade(agora) {
-  if (SCAN.ultT) { const dt = (agora - SCAN.ultT) / 1000; if (dt > 0.02) { SCAN.vel = SCAN.vel * 0.8 + Math.abs(SCAN.ang - SCAN.ultAng) / dt * 0.2; SCAN.ultAng = SCAN.ang; SCAN.ultT = agora; } }
+  if (SCAN.ultT) { const dt = (agora - SCAN.ultT) / 1000; if (dt > 0.02) { let d = SCAN.ang - SCAN.ultAng; d = ((d + 540) % 360) - 180; if (Math.abs(d) > 0.3) SCAN.dirGiro = Math.sign(d); SCAN.vel = SCAN.vel * 0.8 + Math.abs(d) / dt * 0.2; SCAN.ultAng = SCAN.ang; SCAN.ultT = agora; } }
   else { SCAN.ultAng = SCAN.ang; SCAN.ultT = agora; }
 }
-function scanCobertura() {
+function scanCobertura() {      // graus já varridos
   if (!SCAN.cont) return 0;
-  let n = 0, t = 0; for (let a = 0; a < SCAN.nA; a++) { const g = a * 2 - SCAN.aMax; if (Math.abs(g) <= 60) { t++; if (SCAN.cont[a] >= 3) n++; } }
-  return Math.round(n / t * 100);
+  let n = 0; for (let a = 0; a < SCAN.nA; a++) if (SCAN.cont[a] >= 1.5) n++;
+  return n * 2;
 }
 async function scanIniciar() {
   $('fAviso').textContent = '';
@@ -1858,7 +2314,8 @@ async function scanIniciar() {
     setTimeout(() => { if (SCAN.ativo && !SCAN.temGiro && !SON.demo) $('fAviso').textContent = 'Este aparelho não informou para onde está apontando (sem giroscópio). A visão Formas funciona no iPhone.'; }, 2500);
   } else SCAN.temGiro = true;
   scanZerar(); SCAN.ativo = true; SCAN.ang = 0;
-  reagir('farol', SON.demo ? 'Varrendo a sala simulada…' : 'Gire devagar de um lado para o outro, como um farol.', 'varrer', 3000);
+  SCAN.lat = SON.ctx ? SON.dsp.N / SON.ctx.sampleRate * 0.5 + (SON.ctx.baseLatency || 0.01) + 0.05 : 0;
+  reagir('farol', SON.demo ? 'Varrendo a sala simulada…' : 'Gire devagar no lugar, como o radar de um navio.', 'varrer', 3000);
   $('btnVarrer').textContent = 'Parar varredura'; $('btnVarrer').classList.add('ligado');
 }
 function scanParar() {
@@ -1874,20 +2331,21 @@ function scanFormas() {
   SCAN.nitida = SCAN.nitidez ? SonarDSP.deconvAngular(SCAN.grid, SCAN.cont, nA, R, SCAN.sigma / 2, 70, r0, 1.5) : null;
   const G = SCAN.nitida || SCAN.grid, W = SCAN.nitida ? 3 : 6;
   const gan = new Float64Array(R); for (let r = 0; r < R; r++) gan[r] = SonarDSP.ganho(r * dr);
-  let gmax = 0; for (let a = 0; a < nA; a++) if (SCAN.cont[a]) for (let r = r0; r < R; r++) if (G[a * R + r] * gan[r] > gmax) gmax = G[a * R + r] * gan[r];
+  let gmax = 0; for (let a = 0; a < nA; a++) if (visto(a)) for (let r = r0; r < R; r++) if (G[a * R + r] * gan[r] > gmax) gmax = G[a * R + r] * gan[r];
   const lim = SCAN.nitida ? Math.max(1.5, gmax * 0.12) : Math.max(5, gmax * 0.1), pts = [];
   for (let a = 0; a < nA; a++) {
-    if (!SCAN.cont[a]) continue;
+    if (!visto(a)) continue;
     for (let r = r0 + 1; r < R - 1; r++) {
       const v = G[a * R + r];
       if (v * gan[r] < lim || v < G[a * R + r - 1] || v <= G[a * R + r + 1]) continue;  // pico em distância (forte o bastante)
       let ok = true;
-      for (let k = 1; k <= W && ok; k++) {                                                // pico em ângulo (±12°)
-        if (a - k >= 0 && SCAN.cont[a - k] && G[(a - k) * R + r] > v * 1.08) ok = false;
-        if (a + k < nA && SCAN.cont[a + k] && G[(a + k) * R + r] > v * 1.08) ok = false;
+      for (let k = 1; k <= W && ok; k++) {                                                // pico em ângulo (vizinhos dos dois lados, dando a volta)
+        const e = (a - k + nA) % nA, f = (a + k) % nA;
+        if (visto(e) && G[e * R + r] > v * 1.08) ok = false;
+        if (visto(f) && G[f * R + r] > v * 1.08) ok = false;
       }
       if (!ok) continue;
-      const th = (a * 2 - SCAN.aMax) * Math.PI / 180, d = realD(r * dr);
+      const th = angDe(a) * Math.PI / 180, d = realD(r * dr);
       pts.push({ a, d, x: d * Math.sin(th), y: d * Math.cos(th), v, forte: v * gan[r] >= lim * 1.8 });
     }
   }
@@ -1932,7 +2390,7 @@ function scanFormas() {
       }
     }
   }
-  grupos = grupos.map(g => g.sort((p, q) => p.a - q.a));
+  grupos = grupos.map(g => g.sort((p, q) => Math.atan2(p.x, p.y) - Math.atan2(q.x, q.y)));
   SCAN.formas = grupos.filter(g => g.length >= 2 || g[0].forte).map(g => {
     const n = g.length, mx = g.reduce((s, p) => s + p.x, 0) / n, my = g.reduce((s, p) => s + p.y, 0) / n;
     let cxx = 0, cyy = 0, cxy = 0;
@@ -1951,8 +2409,8 @@ function scanFormas() {
     const angC = Math.atan2(mx, my) * 180 / Math.PI;
     return { tipo, icone, d: Math.min(...g.map(p => p.d)), larg: Math.max(larg, 0.1), pos, angC, pts: g,
              ext: [{ x: mx + ux * Math.min(...proj), y: my + uy * Math.min(...proj) }, { x: mx + ux * Math.max(...proj), y: my + uy * Math.max(...proj) }] };
-  }).sort((p, q) => p.d - q.d);
-  const lado = a => Math.abs(a) < 8 ? 'em frente' : `${Math.round(Math.abs(a))}° à ${a > 0 ? 'direita' : 'esquerda'}`;
+  }).sort((p, q) => q.pts.length - p.pts.length).slice(0, 8).sort((p, q) => p.d - q.d);   // as 8 formas mais claras
+  const lado = a => Math.abs(a) < 8 ? 'em frente' : Math.abs(a) > 172 ? 'atrás' : `${Math.round(Math.abs(a))}° à ${a > 0 ? 'direita' : 'esquerda'}`;
   $('fTotal').textContent = SCAN.formas.length ? SCAN.formas.length + (SCAN.formas.length > 1 ? ' formas' : ' forma') : '';
   $('fLista').innerHTML = SCAN.formas.length
     ? SCAN.formas.map((f, i) => `<li><span>${i + 1}. ${f.icone} ${f.tipo}${f.pos ? ' (' + f.pos + ')' : ''}</span><span>${fmt(f.d, 2)} m · ~${fmt(f.larg, 1)} m · ${lado(f.angC)}</span></li>`).join('')
@@ -1965,28 +2423,30 @@ function sonReceber(chunk) {
   if (SON.filaLen + chunk.length > SON.fila.length) SON.filaLen = 0;   // segurança: descarta se acumulou demais
   SON.fila.set(chunk, SON.filaLen); SON.filaLen += chunk.length;
   while (SON.filaLen >= N) {
-    const ok = SonarDSP.perfil(SON.dsp, SON.fila.subarray(0, N), SON.R, SON.pre, SON.pim);
+    const blk = SON.fila.subarray(0, N); let ok = false;
+    if (SON.fase === 'ruido') {                       // 0,4 s de silêncio: espectro do ruído
+      SonarDSP.ruido(SON.dsp, blk);
+      if (SON.dsp.nRuido >= 10) {
+        SON.fase = SON.banda === 0 ? 'sonda' : 'ok';
+        try { SON.gain.gain.setTargetAtTime(SON.vol, SON.ctx.currentTime, 0.03); } catch (e) { SON.gain.gain.value = SON.vol; }
+      }
+    } else {
+      ok = SonarDSP.perfil(SON.dsp, blk, SON.R, SON.pre, SON.pim);
+      if (SON.dsp.nq === 37 && !SON.curvaSonda) SON.curva = SonarDSP.curvaResposta(SON.dsp);
+      if (SON.fase === 'sonda' && SON.dsp.nq >= 37) { sonFimSonda(); return; }
+    }
     SON.fila.copyWithin(0, N, SON.filaLen); SON.filaLen -= N;
-    if (!ok) continue;
-    if (SON.teste) { sonPassoTeste(); if (!SON.ativo) return; continue; }
-    sonQuadro();
+    if (ok && SON.fase === 'ok') sonQuadro();
   }
 }
-
-// Modo Auto: mede o eco direto nas duas faixas e escolhe a melhor para este aparelho
-function sonPassoTeste() {
-  const T = SON.teste; T.n++;
-  if (T.n > 10) { T.soma += SON.dsp.snr; T.k++; }
-  if (T.n < 34) return;
-  T.res[T.banda] = T.k ? T.soma / T.k : 0;
-  const outra = T.banda === 1 ? 2 : 1;
-  if (T.res[outra] === undefined && BANDAS[outra].f1 < SON.dsp.fs * 0.47) { sonAplicarBanda(outra); Object.assign(T, { banda: outra, n: 0, soma: 0, k: 0 }); return; }
-  // prefere a discreta (quase inaudível) se ela estiver no máximo 6 dB pior e for utilizável
-  const d = T.res[1] ?? -99, f = T.res[2] ?? -99;
-  const escolha = d >= 20 && d >= f - 6 ? 1 : f > d ? 2 : 1;
-  SON.teste = null; SON.bandaUsada = escolha;
-  if (escolha !== T.banda) sonAplicarBanda(escolha);
-  sonMontar();
+// Fim do chiado de teste (modo Auto): mede quanto de cada faixa chega limpo e troca para a melhor
+function sonFimSonda() {
+  const sd = SON.dsp, res = SonarDSP.avaliarBandas(sd, BANDAS), esc = escolherBanda(res);
+  SON.resBandas = res; SON.curva = SonarDSP.curvaResposta(sd); SON.curvaSonda = true;
+  const Pn = sd.Pn.slice(), nR = sd.nRuido;
+  sonAplicarBanda(esc); SON.dsp.Pn.set(Pn); SON.dsp.nRuido = nR; SON.fase = 'ok'; sonMontar();
+  const r = res[esc];
+  reagir(r.util > 0.7 ? 'comemorando' : 'ouvindo', `Escolhi a faixa ${BANDAS[esc].nome} (${Math.round(r.util * 100)}% dela chega limpa). Fique parado 3 s.`, 'faixa', 3000, 4200);
 }
 function sonAplicarBanda(b) {
   const ctx = SON.ctx; if (!ctx) return;
@@ -1998,7 +2458,7 @@ function sonAplicarBanda(b) {
   SON.src = src; src.start();
 }
 async function sonTravarTela() {
-  try { if ('wakeLock' in navigator && !SON.trava) { SON.trava = await navigator.wakeLock.request('screen'); SON.trava.addEventListener('release', () => { SON.trava = null; }); } } catch (e) {}
+  try { if ('wakeLock' in navigator && !SON.tela) { SON.tela = await navigator.wakeLock.request('screen'); SON.tela.addEventListener('release', () => { SON.tela = null; }); } } catch (e) {}
 }
 async function sonListarMics() {
   try {
@@ -2027,14 +2487,14 @@ async function sonLigar(deviceId) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio });
     await ctx.resume();
     SON.ctx = ctx; SON.stream = stream; SON.demo = false; SON.mic = deviceId || '';
-    const inicial = SON.banda || 1;
-    SON.dsp = SonarDSP.criar(ctx.sampleRate, BANDAS[inicial]); SON.bandaUsada = inicial;
-    SON.teste = SON.banda === 0 ? { banda: 1, n: 0, soma: 0, k: 0, res: {} } : null;
+    // Auto: começa com um chiado largo (4–21,5 kHz) só para medir a resposta do aparelho
+    SON.dsp = SON.banda === 0 ? SonarDSP.criar(ctx.sampleRate, { f0: 4000, f1: Math.min(21500, ctx.sampleRate * 0.46) }) : SonarDSP.criar(ctx.sampleRate, BANDAS[SON.banda]);
+    SON.bandaUsada = SON.banda || null; SON.fase = 'ruido'; SON.curva = null; SON.curvaSonda = false; SON.resBandas = null;
     SON.fila = new Float32Array(SON.dsp.N * 8); SON.filaLen = 0;
     sonMontar();
     const buf = ctx.createBuffer(1, SON.dsp.N, ctx.sampleRate); buf.copyToChannel(SON.dsp.tx, 0);
     SON.src = ctx.createBufferSource(); SON.src.buffer = buf; SON.src.loop = true;
-    SON.gain = ctx.createGain(); SON.gain.gain.value = SON.vol;
+    SON.gain = ctx.createGain(); SON.gain.gain.value = 0;              // começa mudo: primeiro ouve o ruído
     SON.src.connect(SON.gain).connect(ctx.destination);
     const mic = ctx.createMediaStreamSource(stream), mudo = ctx.createGain(); mudo.gain.value = 0; mudo.connect(ctx.destination);
     try {
@@ -2068,8 +2528,9 @@ function sonParar() {
   try { SON.src && SON.src.stop(); } catch (e) {}
   try { SON.stream && SON.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
   try { SON.ctx && SON.ctx.close(); } catch (e) {}
-  try { SON.trava && SON.trava.release(); } catch (e) {}
-  Object.assign(SON, { ctx: null, stream: null, src: null, gain: null, no: null, teste: null, trava: null });
+  try { SON.tela && SON.tela.release(); } catch (e) {}
+  Object.assign(SON, { ctx: null, stream: null, src: null, gain: null, no: null, tela: null, trava: null, achar: null, fase: 'ok' });
+  if ($('btnAchar')) { $('btnAchar').textContent = 'Achar o alvo'; $('btnAchar').disabled = false; }
   $('btnSonar').textContent = 'Ligar sonar'; $('btnSonar').classList.remove('ligado');
 }
 function sonDemo() {
@@ -2090,14 +2551,29 @@ $('segVisao').addEventListener('click', e => {
   for (const v of ['eco', 'dist', 'formas']) document.querySelectorAll('.so-' + v).forEach(el => el.classList.toggle('oculto-total', v !== SON.visao));
   $('sonLegenda').textContent = { eco: 'Perto do iPhone fica em cima e longe embaixo. O tempo corre da direita para a esquerda.',
     dist: 'A régua mostra tudo o que ecoa à frente. O número grande é o objeto parado mais perto.',
-    formas: 'Visto de cima: o iPhone fica na ponta de baixo do leque. Gire-o devagar para preencher o mapa.' }[SON.visao];
+    formas: 'Radar visto de cima, com o iPhone no centro. Gire devagar no lugar para preencher o mapa.' }[SON.visao];
   if (SON.visao !== 'formas' && SCAN.ativo) scanParar();
+  aplicarInversao();
   ultimoPainel = 0;
   reagir(...{ eco: ['ouvindo', 'Ecograma: o movimento aparece ao longo do tempo.'],
-              dist: ['trena', 'Modo trena: aponte a parte de baixo do iPhone para uma parede.'],
-              formas: ['farol', 'Toque em Iniciar varredura e gire devagar, como um farol.'] }[SON.visao], 'visao-' + SON.visao, 4000);
+              dist: ['trena', 'Modo trena: aponte a parte de baixo do iPhone para uma parede e toque em Achar o alvo.'],
+              formas: ['farol', 'Radar: toque em Iniciar varredura e gire devagar no lugar.'] }[SON.visao], 'visao-' + SON.visao, 4000);
 });
 $('btnVarrer').onclick = () => { if (SCAN.ativo) scanParar(); else scanIniciar(); };
+segmentado('segInverter', v => { SCAN.inverter = v === 1; aplicarInversao(); });
+function aplicarInversao() { $('eco').classList.toggle('invertido', SON.visao === 'formas' && SCAN.inverter); }
+segmentado('segAlvo', null);
+$('segAlvo').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; SON.alvoModo = b.dataset.v; SON.trava = null; if (SON.pr) SON.pr.trEst = null; $('btnDestravar').disabled = true; ultimoPainel = 0; });
+$('btnAchar').onclick = () => acharIniciar();
+$('btnDestravar').onclick = () => { SON.trava = null; if (SON.pr) SON.pr.trEst = null; $('btnDestravar').disabled = true; ultimoPainel = 0; };
+$('dLista').addEventListener('click', e => { const li = e.target.closest('li[data-d]'); if (li) travarEm(Number(li.dataset.d)); });
+$('eco').addEventListener('click', e => {
+  if (SON.visao !== 'dist' || !SON.trena || !SON.distGeo) return;
+  const G = SON.distGeo, rc = $('eco').getBoundingClientRect(), x = e.clientX - rc.left;
+  const dReal = (x - G.x0) / (G.x1 - G.x0) * SON.alc;
+  let m = null, md = 0.15; for (const p of SON.trena.pontos) { const k = Math.abs(realD(p.d) - dReal); if (k < md) { md = k; m = p; } }
+  if (m) travarEm(m.d);
+});
 segmentado('segNitidez', v => { SCAN.nitidez = v === 1; if (SCAN.grid) { scanFormas(); SCAN.imgT = 0; } });
 segmentado('segFeixe', v => { SCAN.sigma = v; if (SCAN.grid) { scanFormas(); SCAN.imgT = 0; } });
 $('btnLimparVarr').onclick = () => { scanZerar(); if (SCAN.ativo) { SCAN.a0 = null; } };
@@ -2106,7 +2582,7 @@ document.querySelectorAll('#segTemp button').forEach(b => b.classList.toggle('at
 $('btnAjustar').onclick = () => {
   const cm = Number(String($('dReal').value).replace(',', '.'));
   if (!(cm >= 20 && cm <= 500)) { $('dAjusteTxt').textContent = 'digite entre 20 e 500 cm'; return; }
-  const p = SON.trena && SON.trena.perto;
+  const p = SON.trena && SON.trena.alvo;
   if (!p) { $('dAjusteTxt').textContent = 'nenhum eco firme agora'; reagir('confuso', 'Não achei um eco firme. Aponte para a parede e espere 2 segundos.', 'ajuste-erro', 1500); return; }
   SON.off = cm / 100 - p.d * SON.escala; salvarAjuste(); ultimoPainel = 0;
   reagir('comemorando', `Trena ajustada para ${Math.round(cm)} cm!`, 'ajuste', 1500);
@@ -2157,98 +2633,162 @@ function visorSonar() {
 function desenharDist() {
   const v = visorSonar(); if (!v) return;
   const { g, w, h } = v, tr = SON.trena, o = SON.ultimo, ligado = SON.ativo || SON.demo;
-  const perto = tr && tr.perto ? realD(tr.perto.d) : null;
+  const al = tr && tr.alvo, dAl = al ? realD(al.d) : null;
   g.textAlign = 'center'; g.fillStyle = '#26331f';
-  g.font = `700 ${Math.round(clamp(w * 0.18, 44, 96))}px ui-rounded, "SF Pro Rounded", -apple-system, sans-serif`;
-  g.fillText(perto != null ? fmt(perto, 2) + ' m' : '—', w / 2, h * 0.36);
+  const tam = Math.round(clamp(w * 0.16, 40, 86));
+  g.font = `700 ${tam}px ui-rounded, "SF Pro Rounded", -apple-system, sans-serif`;
+  const yN = 56 + tam * 0.75;
+  g.fillText(dAl != null ? fmt(dAl, 2) + ' m' : '—', w / 2, yN);
   g.font = '600 13px -apple-system, system-ui, sans-serif'; g.fillStyle = '#75836c';
-  g.fillText(perto != null ? 'objeto parado mais perto' : ligado ? 'procurando ecos firmes…' : 'ligue o sonar ou a demonstração', w / 2, h * 0.36 + 28);
-  // régua de 0 até o alcance
-  const x0 = 34, x1 = w - 26, y = h * 0.72, X = d => x0 + clamp(d / SON.alc, 0, 1) * (x1 - x0), altMax = Math.max(30, y - (h * 0.36 + 64));
+  const modo = SON.trava != null ? '🔒 eco travado' : SON.alvoModo === 'perto' ? 'eco firme mais perto' : 'alvo à frente (automático)';
+  g.fillText(SON.achar ? 'vá e volte devagar com o iPhone…' : dAl != null ? `${modo}${al.mais ? ' · ±' + Math.max(1, Math.round(al.mais * SON.escala * 100)) + ' cm' : ''}` : ligado ? 'procurando ecos firmes…' : 'ligue o sonar ou a demonstração', w / 2, yN + 24);
+  // régua de 0 até o alcance, com os ecos parados como barras
+  const x0 = 34, x1 = w - 26, y = Math.round(h * 0.56), X = d => x0 + clamp(d / SON.alc, 0, 1) * (x1 - x0), altMax = Math.max(26, y - (yN + 44));
+  SON.distGeo = { x0, x1, y };
   g.strokeStyle = '#c9d2b8'; g.lineWidth = 2; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
   const passo = SON.alc <= 1.5 ? 0.25 : SON.alc <= 3 ? 0.5 : 1;
   g.font = '600 10px ' + MONO; g.fillStyle = '#7a8870'; g.lineWidth = 1;
   for (let m = 0; m <= SON.alc + 1e-6; m += passo) {
     g.strokeStyle = '#c9d2b8'; g.beginPath(); g.moveTo(X(m), y - 5); g.lineTo(X(m), y + 5); g.stroke();
-    g.fillText(fmt(m, m % 1 ? (passo < 0.5 ? 2 : 1) : 0) + ' m', X(m), y + 20);
+    g.fillText(fmt(m, m % 1 ? (passo < 0.5 ? 2 : 1) : 0) + ' m', X(m), y + 18);
   }
-  // iPhone na origem
   g.fillStyle = '#5f9e22'; g.beginPath(); g.roundRect ? g.roundRect(x0 - 26, y - 14, 12, 28, 3) : g.rect(x0 - 26, y - 14, 12, 28); g.fill();
-  // ecos parados: barras que sobem da régua
   if (tr) for (const p of tr.pontos) {
-    const x = X(realD(p.d)), alt = 10 + (altMax - 10) * p.rel, ehPerto = p === tr.perto;
-    g.fillStyle = ehPerto ? '#3f6f16' : `rgba(95,158,34,${0.35 + 0.5 * p.rel})`;
+    const x = X(realD(p.d)), alt = 8 + (altMax - 8) * p.rel, ehAlvo = al && al.ponto && Math.abs(al.ponto.d - p.d) < 0.01;
+    g.fillStyle = ehAlvo ? '#3f6f16' : `rgba(95,158,34,${0.3 + 0.5 * p.rel})`;
     g.fillRect(x - 3, y - alt, 6, alt);
-    if (ehPerto || p.rel > 0.5) { g.fillStyle = ehPerto ? '#26331f' : '#5a6852'; g.font = `${ehPerto ? 700 : 600} 11px ` + MONO; g.fillText(fmt(realD(p.d), 2), x, y - alt - 6); }
+    if (ehAlvo || p.rel > 0.5) { g.fillStyle = ehAlvo ? '#26331f' : '#5a6852'; g.font = `${ehAlvo ? 700 : 600} 11px ` + MONO; g.fillText((ehAlvo && SON.trava != null ? '🔒' : '') + fmt(realD(p.d), 2), x, y - alt - 6); }
   }
-  // quem se move: triângulo vermelho abaixo da régua + velocidade
+  // quem se move: triângulo vermelho logo abaixo da régua
   const firme = alvoFirme();
   if (o && o.alvos) for (const a of o.alvos) {
-    if (firme && Math.abs(a.d - firme.d) < 0.15) continue;
-    const x = X(realD(a.d)); g.fillStyle = 'rgba(212,87,58,0.5)'; g.beginPath(); g.moveTo(x, y + 30); g.lineTo(x - 6, y + 41); g.lineTo(x + 6, y + 41); g.closePath(); g.fill();
+    const x = X(realD(a.d)), forte = firme && Math.abs(a.d - firme.d) < 0.15, k = forte ? 7 : 5;
+    g.fillStyle = forte ? '#d4573a' : 'rgba(212,87,58,0.5)'; g.beginPath(); g.moveTo(x, y + 2); g.lineTo(x - k, y + 2 + k * 1.5); g.lineTo(x + k, y + 2 + k * 1.5); g.closePath(); g.fill();
   }
-  if (firme) {
-    const x = X(realD(firme.d)), vel = velocidade();
-    g.fillStyle = '#d4573a'; g.beginPath(); g.moveTo(x, y + 30); g.lineTo(x - 8, y + 44); g.lineTo(x + 8, y + 44); g.closePath(); g.fill();
-    g.font = '700 11px ' + MONO;
-    g.fillText(`movimento ${fmt(realD(firme.d), 2)} m${vel != null && Math.abs(vel) >= 0.05 ? (vel < 0 ? ' ← ' : ' → ') + fmt(Math.abs(vel), 1) + ' m/s' : ''}`, clamp(x, 90, w - 90), y + 60);
+  // cascata: o perfil parado ao longo do tempo (agora em cima)
+  const cy0 = y + 28, cy1 = h - 12;
+  if (SON.casc && cy1 - cy0 > 30) {
+    g.save(); g.imageSmoothingEnabled = true; g.globalAlpha = 0.95;
+    g.drawImage(SON.casc, x0, cy0, x1 - x0, cy1 - cy0); g.restore();
+    g.strokeStyle = 'rgba(117,131,108,0.25)'; g.strokeRect(x0 + 0.5, cy0 + 0.5, x1 - x0 - 1, cy1 - cy0 - 1);
+    g.save(); g.translate(x0 - 8, (cy0 + cy1) / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillStyle = '#98a38e'; g.font = '600 9.5px ' + MONO;
+    g.fillText('agora ↑  tempo', 0, 0); g.restore();
+    if (dAl != null) { g.strokeStyle = 'rgba(63,111,22,0.6)'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(X(dAl), cy0); g.lineTo(X(dAl), cy1); g.stroke(); g.setLineDash([]); }
   }
   g.textAlign = 'left';
 }
 
-// ---------- desenho: visão Formas (leque visto de cima) ----------
+// ---------- desenho: visão Radar (PPI, visto de cima) ----------
+const RADAR_LUT = (() => {
+  const L = new Uint8ClampedArray(256 * 4);
+  for (let i = 0; i < 256; i++) {
+    const q = i / 255, pts = [[0, [20, 70, 45]], [0.35, [40, 170, 95]], [0.7, [95, 245, 150]], [1, [225, 255, 235]]];
+    let k = 0; while (k < pts.length - 2 && q > pts[k + 1][0]) k++;
+    const [qa, ca] = pts[k], [qb, cb] = pts[k + 1], f = clamp((q - qa) / (qb - qa), 0, 1);
+    for (let c = 0; c < 3; c++) L[i * 4 + c] = ca[c] + (cb[c] - ca[c]) * f;
+    L[i * 4 + 3] = Math.round(255 * Math.min(1, Math.pow(q, 0.7) * 1.15));
+  }
+  return L;
+})();
 function desenharFormas(t) {
   const v = visorSonar(); if (!v) return;
-  const { g, w, h } = v, ox = w / 2, oy = h - 30, sinM = Math.sin(SCAN.aMax * Math.PI / 180);
-  const Rpx = Math.max(60, Math.min((w / 2 - 18) / sinM, oy - 46));
-  // imagem do leque (refeita ~5 vezes por segundo, em resolução menor)
-  if (SCAN.grid && (!SCAN.img || t - SCAN.imgT > 200)) {
-    SCAN.imgT = t;
-    const fh = Math.round(Rpx / 2), fw = Math.round(2 * fh * sinM) + 2;
+  const { g, w, h } = v;
+  if (!SCAN.circulo && SCAN.cont) for (let a = 0; a < SCAN.nA; a++) if (SCAN.cont[a] >= 1 && Math.abs(angDe(a)) > 100) { SCAN.circulo = true; SCAN.imgT = 0; break; }
+  const circ = SCAN.circulo, ox = w / 2, oy = circ ? h / 2 + 18 : h - 24;
+  const Rpx = Math.max(60, circ ? Math.min(w / 2 - 18, h / 2 - 50) : Math.min(w / 2 - 18, oy - 62));
+  const agora = performance.now(), R = SON.R, dr = SON.pr ? SON.pr.dr : 0.0107;
+  // tela do radar
+  g.save();
+  g.beginPath();
+  if (circ) g.arc(ox, oy, Rpx + 10, 0, Math.PI * 2); else { g.moveTo(ox - Rpx - 10, oy + 10); g.arc(ox, oy, Rpx + 10, Math.PI, 0); g.lineTo(ox + Rpx + 10, oy + 10); g.closePath(); }
+  const fundo = g.createRadialGradient(ox, oy, 0, ox, oy, Rpx + 10);
+  fundo.addColorStop(0, '#15402b'); fundo.addColorStop(0.7, '#0b2619'); fundo.addColorStop(1, '#06170f');
+  g.fillStyle = fundo; g.fill(); g.lineWidth = 3; g.strokeStyle = '#2e6b47'; g.stroke(); g.clip();
+  // mapa acumulado (refeito ~5 vezes por segundo); o que foi varrido há pouco brilha mais
+  if (SCAN.grid && (!SCAN.img || t - SCAN.imgT > 200 || SCAN.imgCirc !== circ)) {
+    SCAN.imgT = t; SCAN.imgCirc = circ;
+    const raio = Math.round(Math.min(Rpx, 220) / 1.6), fw = 2 * raio, fh = circ ? 2 * raio : raio;
     if (!SCAN.img || SCAN.img.width !== fw || SCAN.img.height !== fh) { SCAN.img = document.createElement('canvas'); SCAN.img.width = fw; SCAN.img.height = fh; }
-    const ctx = SCAN.img.getContext('2d'), im = ctx.createImageData(fw, fh), d = im.data, R = SON.R, dr = SON.pr ? SON.pr.dr : 0.0107;
+    const ctx = SCAN.img.getContext('2d'), im = ctx.createImageData(fw, fh), d = im.data, fonte = SCAN.nitida || SCAN.grid;
     for (let py = 0; py < fh; py++) for (let px = 0; px < fw; px++) {
-      const dx = (px + 0.5 - fw / 2) / fh, dy = (fh - py - 0.5) / fh, rr = Math.hypot(dx, dy), th = Math.atan2(dx, dy) * 180 / Math.PI, k = (py * fw + px) * 4;
-      if (rr > 1 || Math.abs(th) > SCAN.aMax) { d[k + 3] = 0; continue; }
-      const a = Math.round((th + SCAN.aMax) / 2);
-      if (!SCAN.cont[a]) { d[k] = 120; d[k + 1] = 130; d[k + 2] = 110; d[k + 3] = 14; continue; }
+      const dx = (px + 0.5 - raio) / raio, dy = (raio - py - 0.5) / raio, rr = Math.hypot(dx, dy), k = (py * fw + px) * 4;
+      if (rr > 1) { d[k + 3] = 0; continue; }
+      const a = binDe(Math.atan2(dx, dy) * 180 / Math.PI);
+      if (!visto(a)) { d[k] = 30; d[k + 1] = 80; d[k + 2] = 55; d[k + 3] = 18; continue; }
       const ri = Math.round(((rr * SON.alc - SON.off) / SON.escala) / dr);
-      const fonte = SCAN.nitida || SCAN.grid, val = ri >= 0 && ri < R ? fonte[a * R + ri] * SonarDSP.ganho(ri * dr) : 0;
-      const q = SCAN.nitida ? clamp(Math.log2(1 + Math.max(val, 0)) / 4.5, 0, 1) : clamp(Math.log2(Math.max(val, 1)) / 4.5, 0, 1), i = (q * 255) | 0;
-      d[k] = LUT[i * 4]; d[k + 1] = LUT[i * 4 + 1]; d[k + 2] = LUT[i * 4 + 2]; d[k + 3] = Math.max(LUT[i * 4 + 3], 26);
+      const val = ri >= 0 && ri < R ? fonte[a * R + ri] * SonarDSP.ganho(ri * dr) : 0;
+      const q0 = SCAN.nitida ? Math.log2(1 + Math.max(val, 0)) / 4.5 : Math.log2(Math.max(val, 1)) / 4.8;
+      const brilho = 0.62 + 0.38 * Math.exp(-(agora - SCAN.tUlt[a]) / 5000), i = (clamp(q0 * brilho, 0, 1) * 255) | 0;
+      d[k] = RADAR_LUT[i * 4]; d[k + 1] = RADAR_LUT[i * 4 + 1]; d[k + 2] = RADAR_LUT[i * 4 + 2]; d[k + 3] = Math.max(RADAR_LUT[i * 4 + 3], 40);
     }
     ctx.putImageData(im, 0, 0);
   }
-  if (SCAN.img) { g.save(); g.imageSmoothingEnabled = true; g.drawImage(SCAN.img, ox - Rpx * sinM, oy - Rpx, 2 * Rpx * sinM, Rpx); g.restore(); }
-  // grade: arcos de distância e raios de ângulo
-  const A = deg => (deg - 90) * Math.PI / 180, passo = SON.alc <= 1.5 ? 0.5 : SON.alc <= 3 ? 1 : 1;
-  g.strokeStyle = 'rgba(117,131,108,0.28)'; g.lineWidth = 1; g.fillStyle = '#7a8870'; g.font = '600 10px ' + MONO; g.textAlign = 'left';
+  if (SCAN.img) { g.imageSmoothingEnabled = true; g.drawImage(SCAN.img, ox - Rpx, oy - Rpx, 2 * Rpx, circ ? 2 * Rpx : Rpx); }
+  // anéis de distância e marcas de direção
+  const P = deg => [Math.sin(deg * Math.PI / 180), -Math.cos(deg * Math.PI / 180)];
+  const passo = SON.alc <= 1.5 ? 0.5 : 1, lim = circ ? 180 : 90;
+  g.lineWidth = 1; g.font = '600 10px ' + MONO; g.textAlign = 'left';
   for (let m = passo; m <= SON.alc + 1e-6; m += passo) {
-    const rp = m / SON.alc * Rpx; g.beginPath(); g.arc(ox, oy, rp, A(-SCAN.aMax), A(SCAN.aMax)); g.stroke();
-    g.fillText(fmt(m, m % 1 ? 1 : 0) + ' m', ox + rp * Math.sin(SCAN.aMax * Math.PI / 180) + 4, oy - rp * Math.cos(SCAN.aMax * Math.PI / 180));
+    const rp = m / SON.alc * Rpx; g.strokeStyle = 'rgba(110,220,150,0.22)'; g.beginPath(); g.arc(ox, oy, rp, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = 'rgba(150,235,180,0.75)'; g.fillText(fmt(m, m % 1 ? 1 : 0) + ' m', ox + 4, oy - rp + 12);
   }
-  for (const deg of [-60, -30, 0, 30, 60]) { g.beginPath(); g.moveTo(ox, oy); g.lineTo(ox + Rpx * Math.sin(deg * Math.PI / 180), oy - Rpx * Math.cos(deg * Math.PI / 180)); g.stroke(); }
-  // feixe atual
+  for (let deg = -180; deg < 180; deg += 10) {
+    if (!circ && Math.abs(deg) > 90) continue;
+    const [sx, sy] = P(deg), longa = deg % 30 === 0;
+    g.strokeStyle = longa ? 'rgba(110,220,150,0.16)' : 'rgba(110,220,150,0.35)';
+    g.beginPath();
+    if (longa) { g.moveTo(ox, oy); g.lineTo(ox + sx * Rpx, oy + sy * Rpx); } else { g.moveTo(ox + sx * (Rpx - 6), oy + sy * (Rpx - 6)); g.lineTo(ox + sx * Rpx, oy + sy * Rpx); }
+    g.stroke();
+  }
+  // feixe atual com rastro de "fósforo" para trás do sentido do giro
   if (SCAN.ativo && SCAN.temGiro) {
-    const th = clamp(SCAN.ang, -SCAN.aMax, SCAN.aMax) * Math.PI / 180;
-    const gr = g.createLinearGradient(ox, oy, ox + Rpx * Math.sin(th), oy - Rpx * Math.cos(th)); gr.addColorStop(0, 'rgba(201,138,31,0.55)'); gr.addColorStop(1, 'rgba(201,138,31,0)');
-    g.strokeStyle = gr; g.lineWidth = 3; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ox + Rpx * Math.sin(th), oy - Rpx * Math.cos(th)); g.stroke();
+    const th = SCAN.ang, dir = SCAN.dirGiro || 1;
+    for (let k = 14; k >= 0; k--) {
+      const a1 = (th - dir * k * 2.2 - 90) * Math.PI / 180, a2 = (th - dir * (k + 1) * 2.2 - 90) * Math.PI / 180;
+      g.fillStyle = `rgba(120,255,170,${0.2 * (1 - k / 15)})`;
+      g.beginPath(); g.moveTo(ox, oy); g.arc(ox, oy, Rpx, Math.min(a1, a2), Math.max(a1, a2)); g.closePath(); g.fill();
+    }
+    const [sx, sy] = P(th);
+    g.strokeStyle = 'rgba(200,255,220,0.95)'; g.lineWidth = 2; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ox + sx * Rpx, oy + sy * Rpx); g.stroke();
+    Abelha.desenhar(g, ox + sx * (Rpx - 16), oy + sy * (Rpx - 16) + Math.sin(t / 180) * 1.5, 1.35, Math.floor(t / 70) % 2);   // a abelha "patrulha" a ponta do feixe
+    // ecos ao vivo ao longo do feixe
+    const pr = SON.pr;
+    if (pr && pr.estB) {
+      const sig = Math.sqrt(pr.sig2 || 0) || 1e-9, r0 = Math.ceil(Math.max(0.18, pr.zona || 0) / dr);
+      for (let r = r0 + 1; r < R - 1; r++) {
+        const vv = pr.estB[r]; if (vv < sig * 6 || vv < pr.estB[r - 1] || vv <= pr.estB[r + 1]) continue;
+        const rp = realD(r * dr) / SON.alc * Rpx; if (rp > Rpx) break;
+        g.fillStyle = `rgba(230,255,240,${clamp(Math.log10(vv / sig) / 2.2, 0.25, 1)})`;
+        g.beginPath(); g.arc(ox + sx * rp, oy + sy * rp, 3, 0, Math.PI * 2); g.fill();
+      }
+    }
   }
-  // formas reconhecidas
-  const P = (x, y) => [ox + x / SON.alc * Rpx, oy - y / SON.alc * Rpx];
+  // contatos: as formas reconhecidas
+  const PX = (x, y) => [ox + x / SON.alc * Rpx, oy - y / SON.alc * Rpx];
   SCAN.formas.forEach((f, i) => {
-    g.strokeStyle = f.tipo === 'Superfície plana' ? '#3f6f16' : '#8c2f1b'; g.lineWidth = 2.5; g.lineCap = 'round';
-    if (f.tipo === 'Superfície plana' || f.larg >= 0.45) { const [a1, b1] = P(f.ext[0].x, f.ext[0].y), [a2, b2] = P(f.ext[1].x, f.ext[1].y); g.beginPath(); g.moveTo(a1, b1); g.lineTo(a2, b2); g.stroke(); }
-    else { const c = f.pts[Math.floor(f.pts.length / 2)], [a1, b1] = P(c.x, c.y); g.beginPath(); g.arc(a1, b1, 7, 0, Math.PI * 2); g.stroke(); }
-    const c = f.pts[Math.floor(f.pts.length / 2)], [lx, ly] = P(c.x, c.y);
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(lx, ly - 16, 9, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#26331f'; g.lineWidth = 1; g.stroke();
-    g.fillStyle = '#26331f'; g.font = '700 11px ' + MONO; g.textAlign = 'center'; g.fillText(String(i + 1), lx, ly - 12);
+    g.strokeStyle = f.tipo === 'Superfície plana' ? '#ffd27a' : '#ff9d6e'; g.lineWidth = 2.5; g.lineCap = 'round';
+    if (f.tipo === 'Superfície plana' || f.larg >= 0.45) { const [a1, b1] = PX(f.ext[0].x, f.ext[0].y), [a2, b2] = PX(f.ext[1].x, f.ext[1].y); g.beginPath(); g.moveTo(a1, b1); g.lineTo(a2, b2); g.stroke(); }
+    else { const c = f.pts[Math.floor(f.pts.length / 2)], [a1, b1] = PX(c.x, c.y); g.beginPath(); g.arc(a1, b1, 7, 0, Math.PI * 2); g.stroke(); }
+    const c = f.pts[Math.floor(f.pts.length / 2)], [lx, ly] = PX(c.x, c.y);
+    g.fillStyle = '#ffe7b0'; g.beginPath(); g.arc(lx, ly - 15, 8.5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#3a2a08'; g.font = '700 10.5px ' + MONO; g.textAlign = 'center'; g.fillText(String(i + 1), lx, ly - 11.5);
   });
-  // o iPhone na origem
-  g.fillStyle = '#5f9e22'; g.fillRect(ox - 6, oy, 12, 20); g.textAlign = 'left';
-  if ((SON.ativo || SON.demo) && !SCAN.ativo && !(SCAN.cont && SCAN.cont.some(x => x))) {
-    g.fillStyle = '#75836c'; g.font = '600 13px -apple-system, system-ui, sans-serif'; g.textAlign = 'center';
-    g.fillText('Toque em Iniciar varredura e gire o iPhone devagar', w / 2, oy - Rpx * 0.45); g.textAlign = 'left';
+  g.restore();
+  // rótulos de direção, fora da tela verde
+  g.fillStyle = '#7a8870'; g.font = '600 10px ' + MONO; g.textAlign = 'center';
+  for (const deg of circ ? [0, 90, 180, -90] : [0, 45, 90, -45, -90]) {
+    const [sx, sy] = P(deg), rl = Rpx + 22;
+    g.fillText(deg === 0 ? 'frente' : deg === 180 ? 'atrás' : (Math.abs(deg) + '°' + (deg > 0 ? 'D' : 'E')), ox + sx * rl, oy + sy * rl + 4);
+  }
+  // o iPhone
+  g.save(); g.translate(ox, oy); g.rotate((SCAN.ativo && SCAN.temGiro ? SCAN.ang : 0) * Math.PI / 180);
+  g.fillStyle = '#e9f7ee'; g.strokeStyle = '#2e6b47'; g.lineWidth = 1.5;
+  g.beginPath(); g.roundRect ? g.roundRect(-5, -9, 10, 18, 2.5) : g.rect(-5, -9, 10, 18); g.fill(); g.stroke();
+  g.fillStyle = '#5f9e22'; g.fillRect(-2.5, -9, 5, 2.5);
+  g.restore(); g.textAlign = 'left';
+  if ((SON.ativo || SON.demo) && !SCAN.ativo && !(SCAN.cont && SCAN.cont.some(x => x >= 0.5))) {
+    g.fillStyle = 'rgba(190,245,210,0.9)'; g.font = '600 13px -apple-system, system-ui, sans-serif'; g.textAlign = 'center';
+    g.fillText('Toque em Iniciar varredura e gire devagar', ox, oy - Rpx * 0.45); g.textAlign = 'left';
   }
 }
 function desenharSonPerfil() {
@@ -2272,40 +2812,63 @@ function desenharSonResp() {
   g.strokeStyle = r.conf > 0.45 && r.parado ? '#5f9e22' : '#98a38e'; g.lineWidth = 2; g.lineJoin = 'round'; g.stroke();
   g.fillStyle = '#7a8870'; g.font = '10px ' + MONO; g.fillText('±' + fmt(mx, 1) + ' mm', 4, 12);
 }
+// Gráfico "o que o microfone ouve": quanto cada frequência chega acima do ruído (dB), com a faixa em uso
+function desenharResposta() {
+  const c = $('respCv'); if (!c || !c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c, 92); g.clearRect(0, 0, w, h);
+  const fs = SON.ctx ? SON.ctx.sampleRate : 48000, fMax = fs / 2, X = f => 4 + f / fMax * (w - 8), Y = db => h - 16 - clamp(db, 0, 60) / 60 * (h - 24);
+  g.font = '10px ' + MONO; g.fillStyle = '#98a38e'; g.textAlign = 'center';
+  for (let k = 4; k < fMax / 1000; k += 4) { g.strokeStyle = '#eef0e6'; g.beginPath(); g.moveTo(X(k * 1000), 4); g.lineTo(X(k * 1000), h - 16); g.stroke(); g.fillText(k + ' kHz', X(k * 1000), h - 4); }
+  const b = SON.bandaUsada && BANDAS[SON.bandaUsada];
+  if (b) { g.fillStyle = 'rgba(201,138,31,0.12)'; g.fillRect(X(b.f0), 4, X(b.f1) - X(b.f0), h - 20); }
+  const u = SON.dsp && SON.dsp.util; if (u && u.hz > 0 && SON.fase === 'ok') { g.fillStyle = 'rgba(95,158,34,0.18)'; g.fillRect(X(u.f0), 4, X(u.f1) - X(u.f0), h - 20); }
+  const cv = SON.curva; if (!cv) { g.textAlign = 'left'; return; }
+  g.beginPath(); for (let i = 0; i < cv.length; i++) { const x = X((i + 0.5) / cv.length * fMax), y = Y(cv[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); }
+  g.strokeStyle = '#3f6f16'; g.lineWidth = 1.6; g.lineJoin = 'round'; g.stroke();
+  g.setLineDash([4, 4]); g.strokeStyle = 'rgba(38,51,31,.35)'; g.beginPath(); g.moveTo(4, Y(10)); g.lineTo(w - 4, Y(10)); g.stroke(); g.setLineDash([]);
+  g.textAlign = 'left'; g.fillStyle = '#7a8870'; g.fillText('10 dB', 6, Y(10) - 3);
+}
 function painelSonar() {
   const o = SON.ultimo, ligado = SON.ativo || SON.demo, pill = $('pill');
   const sobre = $('sonSobre');
-  pose($('sonArte'), !ligado ? 'dormindo' : SON.teste ? 'ouvindo' : 'calibrando');
+  const ajustando = SON.ativo && SON.fase !== 'ok';
+  pose($('sonArte'), !ligado ? 'dormindo' : ajustando ? 'ouvindo' : 'calibrando');
   if (!ligado) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Sonar desligado'; $('sonSobreSub').textContent = 'toque em Ligar sonar ou veja a demonstração'; }
-  else if (SON.teste) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Ajustando o som…'; $('sonSobreSub').textContent = 'testando a melhor faixa para este aparelho'; }
+  else if (ajustando) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = SON.fase === 'ruido' ? 'Ouvindo o silêncio…' : 'Testando o som…';
+    $('sonSobreSub').textContent = SON.fase === 'ruido' ? 'medindo o ruído do ambiente' : 'um chiado curto mede quais frequências chegam limpas'; }
+  else if (SON.ativo && SON.dsp && SON.dsp.nq < 40) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Equalizando…'; $('sonSobreSub').textContent = 'aplainando a resposta do alto-falante e do microfone'; }
   else if (!o || o.calibrando) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Calibrando…'; $('sonSobreSub').textContent = 'fique parado por 3 segundos'; }
   else sobre.classList.add('oculto');
-  const cal = SON.teste || !o || o.calibrando;
+  const cal = ajustando || !o || o.calibrando;
   const firme = alvoFirme(), nMov = o && o.alvos ? o.alvos.length : 0;
   // reações: calibração pronta, movimento novo, várias pessoas
-  const prontoAgora = ligado && o && !o.calibrando && !SON.teste;
+  const prontoAgora = ligado && o && !o.calibrando && !ajustando;
   if (prontoAgora && !SON.estavaPronto) reagir('comemorando', 'Calibrado! Agora pode se mexer.', 'calibrado', 8000);
   SON.estavaPronto = prontoAgora;
-  if (firme && !SON.viaMov) reagir('surpreso', `Opa! Movimento a ${fmt(realD(firme.d), 2)} m.`, 'mov', 7000, 2600);
+  if (firme && !SON.viaMov && !SON.achar) reagir('surpreso', `Opa! Movimento a ${fmt(realD(firme.d), 2)} m.`, 'mov', 7000, 2600);
   if (nMov > 1 && !SON.viaVarios) reagir('surpreso', `${nMov} coisas se mexendo ao mesmo tempo!`, 'varios', 12000, 2600);
   SON.viaMov = !!firme; SON.viaVarios = nMov > 1;
   pill.textContent = !ligado ? 'Desligado' : cal ? 'Calibrando' : firme ? (nMov > 1 ? nMov + ' em movimento' : 'Movimento') : 'Parado';
   pill.className = 'pill ' + (!ligado ? '' : cal ? 'calibrando' : firme ? 'movimento' : 'parado');
   $('fonte').textContent = SON.demo ? 'sonar · demonstração (simulado)' : SON.ativo ? 'sonar · microfone e alto-falante' : 'sonar acústico';
-  const dAlvo = firme ? realD(firme.d) : null, tr = SON.trena, perto = tr && tr.perto ? realD(tr.perto.d) : null, v = velocidade();
+  const dAlvo = firme ? realD(firme.d) : null, tr = SON.trena, perto = tr && tr.alvo ? realD(tr.alvo.d) : null, v = velocidade();
   $('sonAlvo').innerHTML = dAlvo != null ? `${fmt(dAlvo, 2)} <small>m</small>` : '—';
-  $('sonHudAlvo').textContent = SON.visao === 'dist' ? (perto != null ? `MAIS PERTO ${fmt(perto, 2)} M` : '')
-    : SON.visao === 'formas' ? (SCAN.ativo ? `APONTANDO ${SCAN.ang >= 0 ? '+' : ''}${Math.round(SCAN.ang)}° · ${scanCobertura()}% COBERTO` : (SCAN.cont && SCAN.cont.some(x => x) ? `${scanCobertura()}% COBERTO` : ''))
+  $('sonHudAlvo').textContent = SON.visao === 'dist' ? (perto != null ? `${SON.trava != null ? 'TRAVADO' : 'ALVO'} ${fmt(perto, 2)} M` : '')
+    : SON.visao === 'formas' ? (SCAN.ativo ? `${SCAN.ang >= 0 ? '+' : ''}${Math.round(SCAN.ang)}° · ${scanCobertura()}° VISTOS` : (SCAN.cont && SCAN.cont.some(x => x >= 0.5) ? `${scanCobertura()}° VISTOS` : ''))
     : dAlvo != null ? `MOVIMENTO A ${fmt(dAlvo, 2)} M` : ligado && o && !o.calibrando ? 'SEM MOVIMENTO' : '';
   $('sonPerfilTxt').textContent = dAlvo != null ? `pico a ${fmt(dAlvo, 2)} m` : '—';
   $('dPerto').innerHTML = perto != null ? `${fmt(perto, 2)} <small>m</small>` : '—';
+  $('dPertoTit').textContent = SON.trava != null ? 'eco travado' : SON.alvoModo === 'perto' ? 'mais perto' : 'alvo à frente';
+  const am = tr && tr.alvo && tr.alvo.mais;
+  $('dTravaTxt').textContent = SON.achar ? 'procurando…' : (SON.trava != null ? 'travado' : SON.alvoModo === 'perto' ? 'mais perto' : 'automático') + (am ? ` · ±${Math.max(1, Math.round(am * SON.escala * 100))} cm` : '');
   $('dMov').innerHTML = dAlvo != null ? `${fmt(dAlvo, 2)} <small>m</small>` : '—';
   const semVel = dAlvo == null || v == null || Math.abs(v) < 0.05;
   $('dVel').innerHTML = dAlvo == null || v == null ? '—' : semVel ? 'parado' : `${fmt(Math.abs(v), 1)} <small>m/s</small>`;
   $('dVelTit').textContent = semVel ? 'velocidade' : v < 0 ? 'chegando perto' : 'se afastando';
   const ps = tr ? tr.pontos : [];
   $('dTotal').textContent = ps.length ? ps.length + (ps.length > 1 ? ' ecos' : ' eco') : '';
-  $('dLista').innerHTML = ps.length ? ps.map(p => `<li><span>${fmt(realD(p.d), 2)} m${p === tr.perto ? ' · mais perto' : ''}</span><span>${p.rel > 0.66 ? 'forte' : p.rel > 0.33 ? 'médio' : 'fraco'} · ${Math.round(p.db)} dB</span></li>`).join('')
+  const pAl = tr && tr.alvo && tr.alvo.ponto;
+  $('dLista').innerHTML = ps.length ? ps.map(p => `<li data-d="${p.d}" style="cursor:pointer"><span>${fmt(realD(p.d), 2)} m${pAl && Math.abs(pAl.d - p.d) < 0.01 ? (SON.trava != null ? ' · 🔒 travado' : ' · alvo') : ''}</span><span>${p.rel > 0.66 ? 'forte' : p.rel > 0.33 ? 'médio' : 'fraco'} · ${Math.round(p.db)} dB</span></li>`).join('')
     : `<li class="vazio">${ligado ? 'Nenhum eco firme à frente' : '—'}</li>`;
   if (SON.visao === 'formas' && SCAN.ativo && SCAN.temGiro) {
     const av = $('fAviso');
@@ -2319,16 +2882,19 @@ function painelSonar() {
   SON.viaResp = !!ok;
   $('sonRespTxt').textContent = ok ? `${Math.round(r.bpm)}/min · a ${fmt(r.d, 2)} m` : r && !r.parado ? 'aguardando ficar parado' : ligado ? 'medindo…' : '—';
   const cs = SON.contagem, taxa = cs.length > 2 ? (cs.length - 1) / ((cs[cs.length - 1] - cs[0]) / 1000) : 0;
-  const banda = SON.demo ? 'demonstração' : SON.ativo && SON.bandaUsada ? BANDAS[SON.bandaUsada].nome : '';
+  const banda = SON.demo ? 'demonstração' : SON.ativo && SON.bandaUsada ? BANDAS[SON.bandaUsada].nome : SON.ativo && SON.fase !== 'ok' ? 'teste de som' : '';
+  const u = SON.ativo && SON.dsp && SON.dsp.util && SON.fase === 'ok' ? SON.dsp.util : null;
+  $('respTxt').textContent = SON.demo ? 'simulação' : u ? `útil ${fmt(u.f0 / 1000, 1)}–${fmt(u.f1 / 1000, 1)} kHz` : SON.ativo ? 'medindo…' : '—';
   $('sonHudInfo').textContent = ligado ? `${taxa ? Math.round(taxa) + ' MED/S · ' : ''}${banda.toUpperCase()}` : '';
   if (SON.demo) { $('sonQual').innerHTML = 'Ótima <small>sim.</small>'; $('sonDica').textContent = ''; }
   else if (SON.ativo && SON.dsp && SON.dsp.snr) {
     const q = SON.dsp.snr, nome = q >= 30 ? 'Ótima' : q >= 22 ? 'Boa' : q >= 15 ? 'Fraca' : 'Ruim';
     $('sonQual').innerHTML = `${nome} <small>${Math.round(q)} dB</small>`;
     const dica = $('sonDica');
-    if (SON.teste) dica.textContent = 'Testando qual faixa de som funciona melhor neste aparelho…';
+    if (ajustando) dica.textContent = SON.fase === 'sonda' ? 'Tocando o chiado de teste para escolher a faixa…' : '';
     else if (SON.dsp.clip > 3) dica.textContent = 'O microfone está saturando: baixe o volume.';
-    else if (q < 18) dica.textContent = 'Eco fraco: aumente o volume, desconecte fones Bluetooth e não cubra o alto-falante nem o microfone. Se não melhorar, tente a faixa Forte.';
+    else if (q < 18) dica.textContent = 'Eco fraco: aumente o volume, desconecte fones Bluetooth e não cubra o alto-falante nem o microfone. Se não melhorar, tente a faixa Ampla.';
+    else if (SON.dsp.util && SON.dsp.util.hz < 1500 && SON.dsp.nq >= 40) dica.textContent = 'Pouca faixa útil chegando ao microfone: tente o modo Auto ou a faixa Ampla.';
     else if (!/pausou/.test(dica.textContent)) dica.textContent = '';
   } else { $('sonQual').textContent = '—'; if (!SON.ativo) $('sonDica').textContent = ''; }
 }
@@ -2379,7 +2945,8 @@ function quadro(t) {
     SON.acum += dt / 1000 * SON.pr.fps; let k = 0;
     while (SON.acum >= 1 && k < 6) {
       const varrendo = SCAN.ativo;
-      if (varrendo) { SCAN.ang = 58 * Math.sin(2 * Math.PI * SON.dm.t / 14); scanVelocidade(performance.now()); }
+      if (varrendo) { if (SCAN.demoT0 == null) SCAN.demoT0 = SON.dm.t; SCAN.ang = (((SON.dm.t - SCAN.demoT0) * 20 + 180) % 360) - 180; scanVelocidade(performance.now()); }
+      else SCAN.demoT0 = null;
       SonarDSP.passoDemo(SON.dm, SON.pre, SON.pim, varrendo ? SCAN.ang : 0, !varrendo);
       sonQuadro(); SON.acum -= 1; k++;
     }
@@ -2388,7 +2955,7 @@ function quadro(t) {
   if (aba === 'sonar') {
     if (SON.visao === 'dist') desenharDist(); else if (SON.visao === 'formas') desenharFormas(t); else desenharEco();
     if (SCAN.ativo && t - SCAN.formasT > 1000) { scanFormas(); SCAN.formasT = t; }
-    if (t - ultimoPainel > 120) { painelSonar(); desenharSonPerfil(); desenharSonResp(); ultimoPainel = t; }
+    if (t - ultimoPainel > 120) { painelSonar(); desenharSonPerfil(); desenharSonResp(); desenharResposta(); ultimoPainel = t; }
   } else if (aba === 'grav') {
     const n = GRAV.v.length;
     if (n && GRAV.tocando && !GRAV.arrastando) {
