@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sem Lente">
+<meta name="theme-color" content="#f5f4ec">
+<title>Câmera sem Lente</title>
+<style>
+  :root {
+    --bg: #f5f4ec; --painel: #ffffff; --painel2: #f3f4ea; --borda: #e2e5d4; --texto: #26331f; --fraco: #75836c;
+    --calmo: #6faa2e; --alerta: #c98a1f; --mov: #d4573a; --chapeu: #a8693a;
+    --sombra: 0 1px 2px rgba(60, 72, 40, .06), 0 6px 18px rgba(60, 72, 40, .06);
+    --titulo: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--texto); }
+  body {
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    max-width: 620px; margin: 0 auto; -webkit-text-size-adjust: 100%;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .marca { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .mascote { flex: none; width: 54px; height: 47px; display: block; filter: drop-shadow(0 2px 4px rgba(60,72,40,.18)); }
+  .mascote svg { width: 100%; height: 100%; display: block; }
+  .mascote.espia svg { animation: espiar 5s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes espiar { 0%, 70%, 100% { transform: translateY(0) rotate(0); } 78% { transform: translateY(-2px) rotate(-3deg); } 86% { transform: translateY(-2px) rotate(3deg); } }
+  h1 { font: 700 18px/1.2 var(--titulo); letter-spacing: .1px; }
+  .sobre .mascote { width: 92px; height: 80px; margin-bottom: 2px; }
+  .rodape { margin-top: 18px; text-align: center; color: var(--fraco); font-size: 12px; }
+  .rodape svg { display: block; width: 100%; height: 34px; margin-bottom: 6px; }
+  .num b, .tit b { font-family: var(--titulo); }
+  select { font: inherit; font-size: 14px; color: var(--texto); background: var(--painel2); border: 1px solid var(--borda); border-radius: 10px; padding: 7px 10px; max-width: 220px; }
+  .dica-son { font-size: 13px; color: #92620e; margin-top: 8px; } .dica-son:empty { display: none; }
+  #fonte { font-size: 12px; color: var(--fraco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill { flex: none; font-size: 11.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 6px 11px;
+          border-radius: 999px; border: 1px solid var(--borda); color: var(--fraco); transition: background .25s, color .25s, border-color .25s; }
+  .pill.parado, .pill.vazio { background: #eef6e2; color: #3f6f16; border-color: color-mix(in srgb, var(--calmo) 40%, transparent); }
+  .pill.calibrando { background: #fbf1dc; color: #92620e; border-color: color-mix(in srgb, var(--alerta) 40%, transparent); }
+  .pill.movimento, .pill.presenca { color: #ffffff; background: var(--mov); border-color: var(--mov); }
+
+  .abas { display: grid; grid-template-columns: repeat(4, 1fr); background: #ebede0; border: 1px solid var(--borda); border-radius: 12px; padding: 3px; margin-bottom: 12px; }
+  .abas button { border: 0; background: none; padding: 9px 4px; border-radius: 9px; color: var(--fraco); font-weight: 600; font-size: 14px; }
+  .abas button.ativa { background: #ffffff; color: var(--texto); box-shadow: 0 1px 3px rgba(60,72,40,.14); }
+
+  .visor { position: relative; width: 100%; border-radius: 22px; overflow: hidden; border: 1px solid var(--borda); box-shadow: var(--sombra);
+           background: radial-gradient(circle at 50% 35%, #ffffff, #f1f3e7 85%); }
+  .visor canvas { display: block; width: 100%; touch-action: none; }
+  #campo, #campoGrav { aspect-ratio: 1 / 1; max-height: 56vh; margin: 0 auto; }
+  .hud { position: absolute; font: 600 10.5px/1.2 var(--mono); letter-spacing: .8px; color: var(--fraco); pointer-events: none; }
+  .hud.tl { top: 12px; left: 14px; } .hud.tr { top: 12px; right: 14px; color: var(--texto); text-align: right; }
+  .hud.bl { bottom: 11px; left: 14px; } .hud.br { bottom: 11px; right: 14px; text-align: right; }
+  .rec { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--mov); margin-right: 6px; vertical-align: 0; animation: piscar 1.2s infinite; }
+  @keyframes piscar { 50% { opacity: .2; } }
+  .sobre { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+           background: rgba(250, 249, 243, .82); text-align: center; transition: opacity .35s; pointer-events: none; padding: 20px; }
+  .sobre.oculto { opacity: 0; }
+  .sobre p { font-weight: 600; } .sobre small { color: var(--fraco); font-weight: 400; display: block; }
+  .dica { font-size: 12.5px; color: var(--fraco); text-align: center; margin: 9px 0 12px; }
+
+  .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .grade.tres { grid-template-columns: repeat(3, 1fr); }
+  .num { background: var(--painel); border: 1px solid var(--borda); border-radius: 16px; padding: 11px 13px; min-width: 0; box-shadow: var(--sombra); }
+  .num b { display: block; font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .num span { font-size: 10.5px; color: var(--fraco); text-transform: uppercase; letter-spacing: .8px; }
+  .num small { color: var(--fraco); font-size: 12px; font-weight: 500; }
+
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: 18px; padding: 15px; margin-bottom: 12px; box-shadow: var(--sombra); }
+  .tit { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11.5px; color: var(--fraco); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 9px; }
+  .tit b { color: var(--texto); font-weight: 600; text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; font-size: 13px; }
+  .cartao canvas { width: 100%; height: 84px; display: block; }
+
+  .controles { display: grid; gap: 14px; }
+  .linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+  .seg { display: flex; background: var(--painel2); border: 1px solid var(--borda); border-radius: 10px; padding: 2px; }
+  .seg button { border: 0; background: none; color: var(--fraco); font-weight: 600; padding: 6px 11px; border-radius: 8px; min-width: 38px; }
+  .seg button.ativa { background: #ffffff; color: var(--texto); box-shadow: 0 1px 2px rgba(60,72,40,.16); }
+  button { font: inherit; color: var(--texto); }
+  .botao { font-weight: 600; background: #f1f3e8; border: 1px solid var(--borda); border-radius: 12px; padding: 11px; width: 100%; }
+  .botao:active, .seg button:active { transform: scale(.97); }
+  .dois { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  input[type=range] { flex: 1; max-width: 220px; accent-color: var(--calmo); }
+  output { min-width: 58px; text-align: right; color: var(--fraco); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--borda); background: var(--painel2); color: var(--fraco); font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 999px; }
+  .chip.ativa { color: #2f5512; border-color: color-mix(in srgb, var(--calmo) 55%, transparent); background: color-mix(in srgb, var(--calmo) 14%, #ffffff); }
+
+  details.cartao summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  details.cartao summary::-webkit-details-marker { display: none; }
+  details.cartao summary::after { content: "+"; color: var(--fraco); font-weight: 400; }
+  details[open].cartao summary::after { content: "–"; }
+  .texto { margin-top: 10px; font-size: 14px; color: #45523c; display: grid; gap: 9px; }
+  .texto b { color: var(--texto); }
+
+  .log { list-style: none; max-height: 220px; overflow-y: auto; }
+  .log li { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--borda); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .log li:first-child { border-top: 0; }
+  .log li span:last-child { color: var(--fraco); }
+  .log .vazio { color: var(--fraco); justify-content: center; }
+
+  .aviso { background: #fdf7ea; border-color: #f0dfb8; }
+  .aviso h2 { font-size: 16px; margin-bottom: 6px; }
+  .aviso p { font-size: 14px; color: #45523c; margin-bottom: 8px; }
+  .aviso code { display: block; font: 12.5px/1.4 var(--mono); color: #3f6f16; background: var(--bg); border: 1px solid var(--borda); border-radius: 10px; padding: 10px; margin: 8px 0; word-break: break-all; }
+  .aviso ol { padding-left: 20px; font-size: 14px; color: #45523c; display: grid; gap: 6px; }
+  .oculto-total { display: none !important; }
+  textarea { width: 100%; background: #fbfbf6; color: var(--texto); border: 1px solid var(--borda); border-radius: 10px; padding: 10px;
+             font: 13px/1.4 var(--mono); resize: vertical; min-height: 64px; }
+  textarea:focus { outline: none; border-color: color-mix(in srgb, var(--calmo) 50%, var(--borda)); }
+  .player { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .player .play { width: 48px; flex: none; padding: 9px 0; }
+  .player input { flex: 1; max-width: none; }
+  .botao.primario { background: var(--calmo); color: #ffffff; border-color: var(--calmo); }
+  .botao.primario.ligado { background: #fbe6de; color: #a3361f; border-color: color-mix(in srgb, var(--mov) 50%, var(--borda)); }
+  #eco { display: block; width: 100%; }
+  .aviso-txt { font-size: 13px; color: #92620e; margin-top: 6px; } .aviso-txt:empty { display: none; }
+  @media (prefers-reduced-motion: reduce) { .mascote.espia svg, .rec { animation: none !important; } }
+  button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--calmo); outline-offset: 2px; }
+  @media (min-width: 980px) {
+    body { max-width: 1200px; padding-left: 24px; padding-right: 24px; }
+    .abas { max-width: 620px; }
+    .tela { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr); gap: 18px; align-items: start; }
+    .col-esq { position: sticky; top: 16px; }
+    #campo, #campoGrav { max-height: 74vh; }
+    .dica { margin-bottom: 0; }
+  }
+  .conexao { font: 600 11px var(--mono); color: var(--fraco); }
+  .conexao.ok { color: #3f6f16; } .conexao.ruim { color: var(--mov); }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">
+    <span class="mascote espia" aria-hidden="true"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
+  <g>
+    <!-- rosto -->
+    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
+    <!-- chapéu de explorador -->
+    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
+    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
+    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
+    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
+    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
+    <!-- mãos -->
+    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
+    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
+    <!-- binóculo -->
+    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+  </g>
+  <!-- moita -->
+  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
+  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
+  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg></span>
+    <div style="min-width:0"><h1>Câmera sem Lente</h1><p id="fonte">—</p></div>
+  </div>
+  <div id="pill" class="pill" role="status" aria-live="polite">—</div>
+</header>
+
+<nav class="abas" role="tablist" aria-label="Modos do app">
+  <button role="tab" id="abaLab" class="ativa">Laboratório</button>
+  <button role="tab" id="abaSonar">Sonar</button>
+  <button role="tab" id="abaGrav">iPhone</button>
+  <button role="tab" id="abaVivo">Mac</button>
+</nav>
+
+<!-- ================= LABORATÓRIO ================= -->
+<main id="telaLab" class="tela">
+ <div class="col-esq">
+  <section class="visor">
+    <canvas id="sala"></canvas>
+    <div class="hud tl"><span class="rec"></span>RTI · SIMULAÇÃO</div>
+    <div class="hud tr" id="hudPos">—</div>
+    <div class="hud bl" id="hudRede">—</div>
+    <div class="hud br" id="hudErro">—</div>
+    <div class="sobre" id="labCalib"><p>Calibrando a sala vazia…<small>medindo o ruído de cada link</small></p></div>
+  </section>
+  <p class="dica">Toque e arraste no mapa para mover uma pessoa. Solte e ela fica parada ali.</p>
+ </div>
+ <div class="col-dir">
+  <section class="grade">
+    <div class="num"><b id="nPos">—</b><span>posição estimada</span></div>
+    <div class="num"><b id="nErro">—</b><span>erro (média 10 s)</span></div>
+    <div class="num"><b id="nConf">—</b><span>confiança</span></div>
+    <div class="num"><b id="nLinks">—</b><span>links cortados</span></div>
+  </section>
+
+  <section class="cartao">
+    <div class="tit"><span>Perda de sinal em cada link</span><b id="linksTxt">—</b></div>
+    <canvas id="barras"></canvas>
+  </section>
+
+  <section class="cartao controles">
+    <div class="linha">Sensores <div class="seg" id="segN"><button data-v="4">4</button><button data-v="6">6</button><button data-v="8" class="ativa">8</button><button data-v="12">12</button></div></div>
+    <div class="linha">Pessoas <div class="seg" id="segP"><button data-v="1" class="ativa">1</button><button data-v="2">2</button></div></div>
+    <div class="linha">Ruído do ambiente <input type="range" id="ruido" min="0.4" max="2.5" step="0.1" value="1"><output id="ruidoOut">1,0 dB</output></div>
+    <div class="chips" id="chips">
+      <button class="chip ativa" data-k="calor">Mapa de calor</button>
+      <button class="chip ativa" data-k="links">Links</button>
+      <button class="chip ativa" data-k="real">Pessoa real</button>
+      <button class="chip ativa" data-k="rastro">Rastro</button>
+    </div>
+    <div class="dois">
+      <button class="botao" id="btnAuto">Pausar passeio</button>
+      <button class="botao" id="btnLabCalib">Recalibrar</button>
+    </div>
+  </section>
+
+  <details class="cartao">
+    <summary>Como funciona</summary>
+    <div class="texto">
+      <p><b>Cada par de sensores forma um link.</b> Quando alguém fica entre dois sensores, o corpo absorve parte do sinal e aquele link perde alguns dB. Com vários sensores em volta da sala, os links se cruzam como uma rede.</p>
+      <p><b>A posição sai do cruzamento.</b> O algoritmo (tomografia por rádio, ou RTI) junta a perda de todos os links e reconstrói um mapa 2D. O ponto mais "quente" é onde a pessoa está. Diferente de um detector de movimento, ele vê a pessoa mesmo parada.</p>
+      <p><b>O que é simulado aqui:</b> a física do sinal (sombra do corpo, reflexos e ruído). <b>O que é real:</b> o algoritmo de reconstrução e localização, igual ao que vai rodar com placas ESP32 de verdade.</p>
+      <p><b>Teste você mesmo:</b> com 4 sensores a posição fica imprecisa; com 12, o erro cai bastante. Aumente o ruído para ver o sistema sofrer como num ambiente cheio de interferência. Em salas reais o erro tende a ser maior que na simulação.</p>
+    </div>
+  </details>
+ </div>
+</main>
+
+<!-- ================= SONAR ================= -->
+<main id="telaSonar" class="tela oculto-total">
+ <div class="col-esq">
+  <section class="visor">
+    <canvas id="eco"></canvas>
+    <div class="hud tl"><span class="rec"></span><span id="sonHudModo">SONAR</span></div>
+    <div class="hud tr" id="sonHudAlvo">—</div>
+    <div class="hud" id="sonHudInfo" style="top:28px;left:14px;font-size:9.5px;opacity:.85"></div>
+    <div class="sobre" id="sonSobre"><span class="mascote" aria-hidden="true"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
+  <g>
+    <!-- rosto -->
+    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
+    <!-- chapéu de explorador -->
+    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
+    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
+    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
+    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
+    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
+    <!-- mãos -->
+    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
+    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
+    <!-- binóculo -->
+    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+  </g>
+  <!-- moita -->
+  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
+  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
+  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg></span><p id="sonSobreTit">Sonar desligado<small id="sonSobreSub">toque em Ligar sonar ou veja a demonstração</small></p></div>
+  </section>
+  <div class="dois" style="margin-top:10px">
+    <button class="botao primario" id="btnSonar">Ligar sonar</button>
+    <button class="botao" id="btnSonarDemo">Demonstração</button>
+  </div>
+  <p class="aviso-txt" id="sonErro"></p>
+  <p class="dica-son" id="sonDica"></p>
+  <p class="dica">Perto do iPhone fica em cima e longe embaixo. O tempo corre da direita para a esquerda.</p>
+ </div>
+ <div class="col-dir">
+  <section class="grade tres">
+    <div class="num"><b id="sonAlvo">—</b><span>movimento a</span></div>
+    <div class="num"><b id="sonResp">—</b><span>respiração</span></div>
+    <div class="num"><b id="sonQual">—</b><span>qualidade do eco</span></div>
+  </section>
+  <section class="cartao"><div class="tit"><span>Agora: o que se mexe, por distância</span><b id="sonPerfilTxt">—</b></div><canvas id="sonPerfil"></canvas></section>
+  <section class="cartao"><div class="tit"><span>Respiração (peito subindo e descendo)</span><b id="sonRespTxt">—</b></div><canvas id="sonRespCv"></canvas></section>
+  <section class="cartao controles">
+    <div class="linha">Alcance <div class="seg" id="segAlc"><button data-v="1.5">1,5 m</button><button data-v="3" class="ativa">3 m</button><button data-v="5">5 m</button></div></div>
+    <div class="linha">Sensibilidade <div class="seg" id="segSonSens"><button data-v="6">Baixa</button><button data-v="4.5" class="ativa">Média</button><button data-v="3.2">Alta</button></div></div>
+    <div class="linha">Faixa de som <div class="seg" id="segBanda"><button data-v="0" class="ativa">Auto</button><button data-v="1">Discreta</button><button data-v="2">Forte</button></div></div>
+    <div class="linha oculto-total" id="linhaMic">Microfone <select id="sonMic" aria-label="Microfone"></select></div>
+    <div class="linha">Volume <input type="range" id="sonVol" min="0.1" max="1" step="0.05" value="0.7"><output id="sonVolOut">70%</output></div>
+    <button class="botao" id="btnSonarCalib">Recalibrar (fique parado 3 s)</button>
+  </section>
+  <details class="cartao">
+    <summary>Como usar e limites</summary>
+    <div class="texto">
+      <p><b>Como usar:</b> apoie o iPhone parado numa mesa ou estante, com a parte de baixo livre. Ligue o sonar e fique parado 3 segundos enquanto ele calibra. Depois mova-se: o ecograma mostra a que distância está o movimento.</p>
+      <p><b>Respiração:</b> sente-se parado de frente para o iPhone, a 0,5–1 m, por uns 15 segundos.</p>
+      <p><b>Chiado agudo:</b> na faixa <b>Discreta</b> o sonar emite entre 17,5 e 20,5 kHz, que muita gente não ouve (crianças e animais ouvem melhor). A faixa <b>Forte</b> (14,5 a 17,5 kHz) alcança mais longe, mas é audível. No modo <b>Auto</b>, o app testa as duas no seu aparelho e escolhe.</p>
+      <p><b>No Mac:</b> funciona no Safari ou no Chrome. Se tiver mais de um microfone (fone, webcam), escolha qual usar. Os alto-falantes e o microfone do MacBook ficam mais afastados, então o eco direto é mais fraco: um volume mais alto ajuda.</p>
+      <p><b>No iPhone:</b> a tela fica ligada enquanto o sonar estiver ativo. Desconecte fones Bluetooth, para o som sair pelo próprio iPhone, e não cubra a parte de baixo.</p>
+      <p><b>Limites:</b> alcance prático de 1 a 3 m, não atravessa paredes e piora com barulho alto. Mostra a distância do movimento, não a direção nem a forma.</p>
+      <p><b>Onde funciona:</b> aqui no chat o microfone é bloqueado, então só a demonstração roda. Para usar de verdade, abra o app pelo endereço https dele no Safari.</p>
+    </div>
+  </details>
+ </div>
+</main>
+
+<!-- ================= iPHONE (gravação do Atalhos) ================= -->
+<main id="telaGrav" class="tela oculto-total">
+ <div class="col-esq">
+  <section class="visor">
+    <canvas id="campoGrav"></canvas>
+    <div class="hud tl"><span class="rec"></span>REPLAY · IPHONE</div>
+    <div class="hud tr" id="hudGravVal">0%</div>
+    <div class="hud bl" id="hudGravRssi">— dBm</div>
+    <div class="hud br" id="hudGravTempo">00:00</div>
+    <div class="sobre" id="gravVazio"><span class="mascote" aria-hidden="true"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
+  <g>
+    <!-- rosto -->
+    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
+    <!-- chapéu de explorador -->
+    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
+    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
+    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
+    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
+    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
+    <!-- mãos -->
+    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
+    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
+    <!-- binóculo -->
+    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+  </g>
+  <!-- moita -->
+  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
+  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
+  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg></span><p>Nenhuma gravação ainda<small>grave com o atalho no iPhone e cole a gravação aqui</small></p></div>
+  </section>
+  <div class="player">
+    <button class="botao play" id="btnPlay" aria-label="Reproduzir">▶</button>
+    <input type="range" id="scrub" min="0" max="1" step="0.01" value="0" aria-label="Posição da gravação">
+    <div class="seg" id="segVel"><button data-v="1">1×</button><button data-v="5" class="ativa">5×</button><button data-v="20">20×</button></div>
+  </div>
+  <p class="dica">O atalho grava 1 leitura por segundo. O replay mostra o que o sinal "viu" durante a gravação.</p>
+ </div>
+ <div class="col-dir">
+  <section class="cartao">
+    <div class="tit"><span>Gravação do iPhone</span><b id="gravInfo"></b></div>
+    <textarea id="gravTexto" rows="3" placeholder="Toque aqui e escolha Colar"></textarea>
+    <p class="aviso-txt" id="gravErro"></p>
+    <div class="linha" style="margin-top:10px">Sensibilidade <div class="seg" id="segSensGrav"><button data-v="1">Baixa</button><button data-v="2" class="ativa">Média</button><button data-v="3">Alta</button></div></div>
+    <div class="dois" style="margin-top:10px"><button class="botao" id="btnExemplo">Carregar exemplo</button><button class="botao" id="btnLimpar">Limpar</button></div>
+  </section>
+  <section class="grade tres">
+    <div class="num"><b id="gDur">—</b><span>duração</span></div>
+    <div class="num"><b id="gEv">—</b><span>movimentos</span></div>
+    <div class="num"><b id="gVar">—</b><span>variação</span></div>
+  </section>
+  <section class="cartao"><div class="tit"><span>Sinal durante a gravação</span><b id="gRssiTxt">—</b></div><canvas id="gOnda"></canvas></section>
+  <section class="cartao"><div class="tit"><span>Perturbação × limiar</span><b id="gAgitTxt">—</b></div><canvas id="gFaixa"></canvas></section>
+  <section class="cartao"><div class="tit"><span>Movimentos detectados</span><b id="gLogTotal"></b></div><ul id="gLog" class="log"><li class="vazio">—</li></ul></section>
+  <details class="cartao">
+    <summary>Como gravar pelo iPhone</summary>
+    <div class="texto">
+      <p><b>1.</b> No app Atalhos do iPhone, toque em <b>Câmera sem Lente</b>.</p>
+      <p><b>2.</b> Nos primeiros 15 segundos, deixe o iPhone parado e fique fora do caminho entre ele e o roteador: é a calibração.</p>
+      <p><b>3.</b> Depois, ande pelo ambiente. O atalho grava por 2 minutos e vibra no fim.</p>
+      <p><b>4.</b> Ele copia a gravação e abre este app nesta aba. Toque na caixa acima e escolha <b>Colar</b>.</p>
+      <p>Só o sinal do iPhone é usado: o app mostra <b>quando</b> e <b>quanto</b> o ambiente se mexeu, não a posição. A última gravação fica salva neste navegador.</p>
+    </div>
+  </details>
+ </div>
+</main>
+
+<!-- ================= AO VIVO ================= -->
+<main id="telaVivo" class="oculto-total">
+  <section class="cartao aviso" id="vivoAviso">
+    <span class="mascote" aria-hidden="true" style="width:74px;height:64px;margin-bottom:6px"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
+  <g>
+    <!-- rosto -->
+    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
+    <!-- chapéu de explorador -->
+    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
+    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
+    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
+    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
+    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
+    <!-- mãos -->
+    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
+    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
+    <!-- binóculo -->
+    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
+    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
+    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
+    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
+  </g>
+  <!-- moita -->
+  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
+  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
+  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg></span>
+    <h2>Abra pelo endereço do sensor</h2>
+    <p>Aqui no chat, o navegador bloqueia o acesso à sua rede Wi-Fi, então o modo ao vivo só funciona quando o app é aberto pelo próprio sensor. Por enquanto o sensor é o seu Mac.</p>
+    <ol>
+      <li>Coloque <b>servidor.swift</b> e <b>camera.html</b> na pasta <b>CameraSemLente</b>, na Mesa.</li>
+      <li>No Terminal do Mac, rode:<code id="cmd">cd ~/Desktop/CameraSemLente && swift servidor.swift</code></li>
+      <li>Abra no Safari do iPhone o endereço que aparecer (ex.: http://192.168.0.12:8080), na mesma rede.</li>
+    </ol>
+    <p style="margin-top:10px">Com só o Mac, o app mede <b>quanto</b> o ambiente se mexe. A posição exata aparece quando houver 4 ou mais sensores ESP32: veja o Laboratório 2D.</p>
+  </section>
+
+  <section id="vivoConteudo" class="tela oculto-total">
+   <div class="col-esq">
+    <div class="linha" style="margin-bottom:8px"><span class="conexao" id="conexao">conectando…</span><span class="conexao" id="latencia"></span></div>
+    <section class="visor" id="visorIntens">
+      <canvas id="campo"></canvas>
+      <div class="hud tl"><span class="rec"></span>AO VIVO</div>
+      <div class="hud tr" id="hudVal">0%</div>
+      <div class="hud bl" id="hudRssi">— dBm</div>
+      <div class="hud br" id="hudHora">--:--:--</div>
+      <div class="sobre" id="vivoCalib">
+        <svg width="70" height="70" viewBox="0 0 74 74"><circle cx="37" cy="37" r="32" fill="none" stroke="#26392b" stroke-width="5"/>
+          <circle id="anel" cx="37" cy="37" r="32" fill="none" stroke="#e3a03a" stroke-width="5" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201" transform="rotate(-90 37 37)"/></svg>
+        <p>Calibrando o ambiente…<small>fique parado e fora do caminho do sinal</small></p>
+      </div>
+    </section>
+    <section class="visor oculto-total" id="visorSalaVivo">
+      <canvas id="salaVivo"></canvas>
+      <div class="hud tl"><span class="rec"></span>RTI · AO VIVO</div>
+      <div class="hud tr" id="hudPosVivo">—</div>
+      <div class="sobre" id="vivoCalibSala"><p>Calibrando a sala vazia…<small>saia da sala por 6 segundos</small></p></div>
+    </section>
+    <p class="dica" id="vivoDica">O visor mostra o quanto o sinal está sendo perturbado, não a posição. Para posição, são precisos 4+ sensores.</p>
+   </div>
+   <div class="col-dir">
+    <section class="cartao" id="cartaoOnda">
+      <div class="tit"><span>Sinal recebido</span><b id="rssiTxt">—</b></div>
+      <canvas id="onda"></canvas>
+    </section>
+    <section class="cartao" id="cartaoFaixa">
+      <div class="tit"><span>Perturbação × limiar</span><b id="agitTxt">—</b></div>
+      <canvas id="faixa"></canvas>
+    </section>
+    <section class="grade tres soMac">
+      <div class="num"><b id="sEventos">0</b><span>eventos</span></div>
+      <div class="num"><b id="sRuido">—</b><span>ruído dBm</span></div>
+      <div class="num"><b id="sTaxa">—</b><span>Mbps</span></div>
+    </section>
+    <section class="cartao controles">
+      <button class="botao" id="btnCalib">Recalibrar ambiente</button>
+      <div class="linha soMac">Sensibilidade <input type="range" id="sens" min="1" max="5" step="1" value="3"><output id="sensOut">média</output></div>
+      <div class="linha">Som ao detectar <div class="seg" id="segSom"><button data-v="0" class="ativa">Não</button><button data-v="1">Sim</button></div></div>
+    </section>
+    <section class="cartao soMac">
+      <div class="tit"><span>Registro de movimentos</span><b id="logTotal"></b></div>
+      <ul id="log" class="log"><li class="vazio">Nenhum movimento ainda</li></ul>
+    </section>
+   </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <svg viewBox="0 0 600 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34 C20 20 40 16 60 22 C80 8 110 8 125 20 C145 6 175 10 185 22 C205 12 230 12 245 24 C265 8 300 6 315 20 C335 10 360 12 372 24 C392 10 420 8 438 21 C455 12 480 12 492 24 C510 10 540 10 556 22 C572 14 590 18 600 26 L600 34 Z" fill="#2c5a1e"/><path d="M0 34 C30 26 50 24 75 28 C100 18 130 20 150 29 C175 20 205 21 222 30 C250 20 280 21 300 29 C325 19 355 21 372 30 C398 21 425 22 445 29 C470 20 500 22 520 30 C545 22 575 23 600 30 L600 34 Z" fill="#3f7a27"/></svg>
+  Câmera sem Lente · enxergando com sinais, não com lentes
+</footer>
+
+<script>
+// ===== Motor de tomografia por rádio (RTI) =====
+// Modelo clássico (Wilson & Patwari): cada link entre dois sensores é afetado
+// por quem está dentro de uma elipse estreita em volta da linha entre eles.
+// Medindo a perda de sinal de todos os links, reconstrói-se um mapa 2D.
+
+const RTI = (() => {
+  const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+
+  function posicionarSensores(W, H, N) {
+    const per = 2 * (W + H), nos = [];
+    for (let k = 0; k < N; k++) {
+      const s = (k + 0.5) * per / N;
+      let x, y;
+      if (s < W) { x = s; y = 0; }
+      else if (s < W + H) { x = W; y = s - W; }
+      else if (s < 2 * W + H) { x = W - (s - W - H); y = H; }
+      else { x = 0; y = H - (s - 2 * W - H); }
+      nos.push({ id: 'S' + (k + 1), x, y });
+    }
+    return nos;
+  }
+
+  // Monta a sala e pré-calcula a matriz de reconstrução Π (P × L)
+  function criar({ W, H, nos, res = 0.25, lambda = 0.3, alfa = 3, beta = 0.6 }) {
+    const links = [];
+    for (let i = 0; i < nos.length; i++)
+      for (let j = i + 1; j < nos.length; j++) {
+        const d = dist(nos[i].x, nos[i].y, nos[j].x, nos[j].y);
+        const mesmaParede = (Math.abs(nos[i].x - nos[j].x) < 1e-6 && (nos[i].x < 1e-6 || Math.abs(nos[i].x - W) < 1e-6)) ||
+                            (Math.abs(nos[i].y - nos[j].y) < 1e-6 && (nos[i].y < 1e-6 || Math.abs(nos[i].y - H) < 1e-6));
+        if (d > 0.5 && !mesmaParede) links.push({ a: i, b: j, d });
+      }
+    const nx = Math.max(4, Math.round(W / res)), ny = Math.max(4, Math.round(H / res));
+    const P = nx * ny, L = links.length;
+    const px = new Float64Array(P), py = new Float64Array(P);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { px[j * nx + i] = (i + 0.5) * W / nx; py[j * nx + i] = (j + 0.5) * H / ny; }
+
+    // Pesos: pixel dentro da elipse do link (excesso de caminho < lambda)
+    const Wm = new Float64Array(L * P);
+    links.forEach((lk, l) => {
+      const A = nos[lk.a], B = nos[lk.b], w = 1 / Math.sqrt(lk.d);
+      for (let p = 0; p < P; p++) {
+        const e = dist(px[p], py[p], A.x, A.y) + dist(px[p], py[p], B.x, B.y) - lk.d;
+        if (e < lambda) Wm[l * P + p] = w;
+      }
+    });
+
+    // Q = WᵀW + α·(laplaciano) + β·I   (regularização: mapa suave)
+    const Q = new Float64Array(P * P);
+    for (let l = 0; l < L; l++) {
+      const off = l * P, idx = [];
+      for (let p = 0; p < P; p++) if (Wm[off + p]) idx.push(p);
+      for (const p of idx) for (const q of idx) Q[p * P + q] += Wm[off + p] * Wm[off + q];
+    }
+    const par = (p, q) => { Q[p * P + p] += alfa; Q[q * P + q] += alfa; Q[p * P + q] -= alfa; Q[q * P + p] -= alfa; };
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const p = j * nx + i;
+      if (i + 1 < nx) par(p, p + 1);
+      if (j + 1 < ny) par(p, p + nx);
+      Q[p * P + p] += beta;
+    }
+
+    // Cholesky Q = R Rᵀ
+    const R = Q;
+    for (let j = 0; j < P; j++) {
+      let s = R[j * P + j];
+      for (let k = 0; k < j; k++) s -= R[j * P + k] * R[j * P + k];
+      const djj = Math.sqrt(Math.max(s, 1e-12));
+      R[j * P + j] = djj;
+      for (let i = j + 1; i < P; i++) {
+        let t = R[i * P + j];
+        for (let k = 0; k < j; k++) t -= R[i * P + k] * R[j * P + k];
+        R[i * P + j] = t / djj;
+      }
+    }
+    // Π[:, l] = Q⁻¹ · W[l, :]ᵀ
+    const Pi = new Float64Array(P * L), v = new Float64Array(P);
+    for (let l = 0; l < L; l++) {
+      for (let i = 0; i < P; i++) {
+        let t = Wm[l * P + i];
+        for (let k = 0; k < i; k++) t -= R[i * P + k] * v[k];
+        v[i] = t / R[i * P + i];
+      }
+      for (let i = P - 1; i >= 0; i--) {
+        let t = v[i];
+        for (let k = i + 1; k < P; k++) t -= R[k * P + i] * v[k];
+        v[i] = t / R[i * P + i];
+      }
+      for (let p = 0; p < P; p++) Pi[p * L + l] = v[p];
+    }
+    // desvio do ruído em cada pixel, para normalizar o mapa (1 dB de ruído por link)
+    const sdp = new Float64Array(P);
+    for (let p = 0; p < P; p++) { let s = 0; for (let l = 0; l < L; l++) s += Pi[p * L + l] ** 2; sdp[p] = Math.sqrt(s); }
+
+    return { W, H, nos, links, nx, ny, P, L, px, py, Pi, sdp };
+  }
+
+  // y: perda de sinal (dB, positivo = mais perda) de cada link → mapa normalizado (múltiplos do ruído)
+  function reconstruir(s, y, sigma, saida) {
+    const x = saida || new Float64Array(s.P);
+    for (let p = 0; p < s.P; p++) {
+      let t = 0; const o = p * s.L;
+      for (let l = 0; l < s.L; l++) t += s.Pi[o + l] * y[l];
+      x[p] = t / (s.sdp[p] * sigma);
+    }
+    return x;
+  }
+
+  // Picos do mapa → posições (centroide ponderado em volta de cada pico)
+  function localizar(s, x, { limiar = 4.5, maxPessoas = 1, separacao = 1.1 } = {}) {
+    const achados = [], usado = new Uint8Array(s.P);
+    for (let n = 0; n < maxPessoas; n++) {
+      let best = -1, bv = -Infinity;
+      for (let p = 0; p < s.P; p++) if (!usado[p] && x[p] > bv) { bv = x[p]; best = p; }
+      if (best < 0 || bv < limiar || (achados.length && bv < achados[0].forca * 0.35)) break;
+      const bx = s.px[best], by = s.py[best];
+      let sw = 0, sx = 0, sy = 0;
+      for (let p = 0; p < s.P; p++) {
+        if (dist(s.px[p], s.py[p], bx, by) > 0.6) continue;
+        const w = x[p] - bv * 0.55;
+        if (w > 0) { sw += w; sx += w * s.px[p]; sy += w * s.py[p]; }
+      }
+      achados.push({ x: sw ? sx / sw : bx, y: sw ? sy / sw : by, forca: bv });
+      for (let p = 0; p < s.P; p++) if (dist(s.px[p], s.py[p], bx, by) < separacao) usado[p] = 1;
+    }
+    return achados;
+  }
+
+  return { posicionarSensores, criar, reconstruir, localizar, dist };
+})();
+
+// ===== Simulador físico (diferente do modelo do RTI, para o teste ser honesto) =====
+const Simulador = (() => {
+  let semente = 12345;
+  const rnd = () => (semente = (semente * 1664525 + 1013904223) >>> 0) / 4294967296;
+  const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+  function criarRuido(L) { return new Float64Array(L); }
+
+  // Perda de sinal de cada link causada pelas pessoas + desvanecimento multipercurso + ruído
+  function medir(s, pessoas, sigma, ruido, y) {
+    for (let l = 0; l < s.L; l++) {
+      const lk = s.links[l], A = s.nos[lk.a], B = s.nos[lk.b];
+      let perda = 0;
+      for (const p of pessoas) {
+        const e = RTI.dist(p.x, p.y, A.x, A.y) + RTI.dist(p.x, p.y, B.x, B.y) - lk.d;
+        perda += 6.5 * Math.exp(-e / 0.11);                                         // sombra do corpo
+        perda += 1.1 * Math.sin(17 * p.x + 11 * p.y + 3.7 * l) * Math.exp(-e / 0.5); // multipercurso
+      }
+      ruido[l] = 0.75 * ruido[l] + 0.66 * sigma * gauss();                           // ruído com memória
+      y[l] = perda + ruido[l];
+    }
+    return y;
+  }
+  return { medir, criarRuido, rnd, gauss };
+})();
+
+
+
+</script>
+<script>
+// ===== Motor do sonar acústico =====
+// O alto-falante emite um "chirp" (varredura de 17,5 a 20,5 kHz) a cada N amostras.
+// O microfone grava; a correlação com o chirp revela cada eco como um pico
+// cujo atraso = distância × 2 / velocidade do som. Subtraindo o fundo estático,
+// sobra só o que se move.
+
+const SonarDSP = (() => {
+  const C = 343;                        // velocidade do som (m/s)
+  const clampSnr = v => Number.isFinite(v) ? Math.max(0, Math.min(v, 90)) : 0;
+
+  const TAB = new Map();
+  function tabelas(n) {
+    let t = TAB.get(n); if (t) return t;
+    const rev = new Uint32Array(n), cos = new Float64Array(n / 2), sin = new Float64Array(n / 2);
+    for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; rev[i] = j; }
+    for (let k = 0; k < n / 2; k++) { cos[k] = Math.cos(2 * Math.PI * k / n); sin[k] = Math.sin(2 * Math.PI * k / n); }
+    t = { rev, cos, sin }; TAB.set(n, t); return t;
+  }
+  function fft(re, im, inv) {
+    const n = re.length, { rev, cos, sin } = tabelas(n), sg = inv ? 1 : -1;
+    for (let i = 1; i < n; i++) { const j = rev[i]; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for (let len = 2; len <= n; len <<= 1) {
+      const h = len >> 1, passo = n / len;
+      for (let i = 0; i < n; i += len) {
+        for (let j = 0, k = 0; j < h; j++, k += passo) {
+          const wr = cos[k], wi = sg * sin[k], a = i + j, b = a + h;
+          const tr = re[b] * wr - im[b] * wi, ti = re[b] * wi + im[b] * wr;
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+        }
+      }
+    }
+    if (inv) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+  }
+
+  // Sinal transmitido + espectro de referência
+  function criar(fs, { f0 = 17500, f1 = 20500, dur = 0.010 } = {}) {
+    const N = 2048, Lc = Math.round(dur * fs), tx = new Float32Array(N);
+    for (let n = 0; n < Lc; n++) {
+      const t = n / fs, w = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (Lc - 1));
+      tx[n] = w * Math.sin(2 * Math.PI * (f0 * t + (f1 - f0) * t * t / (2 * dur)));
+    }
+    const cr = Float64Array.from(tx), ci = new Float64Array(N); fft(cr, ci, false);
+    const mask = new Uint8Array(N);
+    for (let k = 1; k < N / 2; k++) { const f = k * fs / N; if (f >= f0 - 500 && f <= f1 + 500) mask[k] = 1; }
+    const D = Math.max(1, Math.round(0.01 * 2 / C * fs));          // passo de ~1 cm
+    return { fs, N, tx, cr, ci, mask, D, dr: D * C / (2 * fs), f0, f1,
+             lag: -1, lagHist: new Float64Array(N), lagN: 0, A0: 0, re: new Float64Array(N), im: new Float64Array(N),
+             snr: 0, clip: 0, pico: 0,
+             fps: fs / N, lambda: C / ((f0 + f1) / 2) };
+  }
+
+  // Um bloco de N amostras do microfone → perfil complexo de distância (R faixas de ~1 cm)
+  function perfil(s, bloco, R, pre, pim) {
+    const { N, re, im } = s;
+    let pico = 0;
+    for (let i = 0; i < N; i++) { const v = bloco[i]; re[i] = v; im[i] = 0; const a = v < 0 ? -v : v; if (a > pico) pico = a; }
+    s.pico = s.pico * 0.9 + pico * 0.1; s.clip = pico > 0.97 ? s.clip + 1 : Math.max(0, s.clip - 0.2);
+    fft(re, im, false);
+    for (let k = 0; k < N; k++) {
+      if (s.mask[k]) { const xr = re[k], xi = im[k]; re[k] = 2 * (xr * s.cr[k] + xi * s.ci[k]); im[k] = 2 * (xi * s.cr[k] - xr * s.ci[k]); }
+      else { re[k] = 0; im[k] = 0; }
+    }
+    fft(re, im, true);
+    if (s.lag < 0) {                                  // sincroniza: caminho direto alto-falante → microfone
+      for (let i = 0; i < N; i++) s.lagHist[i] += Math.hypot(re[i], im[i]);
+      if (++s.lagN >= 8) { let b = 0; for (let i = 1; i < N; i++) if (s.lagHist[i] > s.lagHist[b]) b = i; s.lag = b; }
+      return false;
+    }
+    let b = s.lag, bv = -1;                           // acompanha pequenas derivas do relógio de áudio
+    for (let d = -6; d <= 6; d++) { const i = (s.lag + d + N) % N, v = Math.hypot(re[i], im[i]); if (v > bv) { bv = v; b = i; } }
+    s.lag = b; s.A0 = s.A0 ? s.A0 * 0.9 + bv * 0.1 : bv;
+    let ru = 0; for (let k = 0; k < 96; k++) { const i = (b + (N >> 1) - 400 + k * 8) % N; ru += Math.hypot(re[i], im[i]); }
+    const snr = bv > 0 ? clampSnr(20 * Math.log10(bv / Math.max(ru / 96, 1e-9))) : 0; s.snr = s.snr ? s.snr * 0.9 + snr * 0.1 : snr;
+    // referência de fase = o próprio caminho direto: cancela a deriva do relógio de áudio
+    const ur = re[b] / (bv || 1), ui = -im[b] / (bv || 1), inv = 1 / (s.A0 || 1);
+    for (let r = 0; r < R; r++) {
+      const i = (s.lag + r * s.D) % N;
+      pre[r] = (re[i] * ur - im[i] * ui) * inv; pim[r] = (re[i] * ui + im[i] * ur) * inv;
+    }
+    return true;
+  }
+
+  // ---- Processamento comum (áudio real e demonstração) ----
+  function criarProcessador(R, dr, fps, lambda) {
+    const H = Math.round(fps * 20);                   // 20 s de histórico para a respiração
+    const rMax = Math.min(R, Math.round(1.6 / dr));
+    return { R, dr, fps, lambda, H, rMax, r0: Math.ceil(0.15 / dr),
+             bgr: new Float64Array(R), bgi: new Float64Array(R), mov: new Float64Array(R), razao: new Float64Array(R),
+             lim: null, n: 0, cal: null, k: 4.5,
+             hre: Array.from({ length: H }, () => new Float32Array(rMax)), him: Array.from({ length: H }, () => new Float32Array(rMax)),
+             hPos: 0, hN: 0, ultimoMov: -1e9, resp: null };
+  }
+  const ganho = d => Math.min(Math.max(Math.pow(d / 0.5, 1.5), 0.35), 25);   // compensa o eco mais fraco de longe
+
+  function iniciarCalibracao(pr) { pr.cal = { n: 0, s: new Float64Array(pr.R), s2: new Float64Array(pr.R) }; pr.lim = null; }
+
+  function processar(pr, pre, pim) {
+    const { R, dr } = pr, a = pr.n < 10 ? 0.5 : 0.06;
+    for (let r = 0; r < R; r++) {
+      if (pr.n === 0) { pr.bgr[r] = pre[r]; pr.bgi[r] = pim[r]; }
+      const dx = pre[r] - pr.bgr[r], dy = pim[r] - pr.bgi[r];
+      pr.bgr[r] += a * dx; pr.bgi[r] += a * dy;
+      const mv = Math.hypot(dx, dy) * ganho(r * dr);
+      pr.mov[r] = pr.n ? pr.mov[r] * 0.55 + mv * 0.45 : mv;
+    }
+    pr.n++;
+    // histórico (sem subtração de fundo) para a respiração
+    const hr = pr.hre[pr.hPos], hi = pr.him[pr.hPos];
+    for (let r = 0; r < pr.rMax; r++) { hr[r] = pre[r]; hi[r] = pim[r]; }
+    pr.hPos = (pr.hPos + 1) % pr.H; pr.hN = Math.min(pr.hN + 1, pr.H);
+
+    if (pr.n < 15) return { calibrando: true, progresso: 0, alvo: null };
+    if (!pr.lim && !pr.cal) iniciarCalibracao(pr);
+    if (pr.cal) {
+      const c = pr.cal; c.n++;
+      for (let r = 0; r < R; r++) { c.s[r] += pr.mov[r]; c.s2[r] += pr.mov[r] ** 2; }
+      const total = Math.round(pr.fps * 3);
+      if (c.n >= total) {
+        const lim = new Float64Array(R), med = [];
+        for (let r = 0; r < R; r++) { const m = c.s[r] / c.n; med.push(m); lim[r] = m; }
+        med.sort((x, y) => x - y); const piso = med[Math.floor(med.length / 2)];
+        for (let r = 0; r < R; r++) {
+          const m = c.s[r] / c.n, sd = Math.sqrt(Math.max(c.s2[r] / c.n - m * m, 0));
+          lim[r] = Math.max(m + pr.k * sd, piso * 3, 1e-6);
+        }
+        pr.lim = lim; pr.cal = null;
+      }
+      return { calibrando: true, progresso: c.n / total, alvo: null };
+    }
+    let melhor = -1, mv = 1.3, perto = -1;
+    for (let r = 0; r < R; r++) {
+      pr.razao[r] = r < pr.r0 ? 0 : pr.mov[r] / pr.lim[r];
+      if (pr.razao[r] > mv) { mv = pr.razao[r]; melhor = r; }
+      if (perto < 0 && pr.razao[r] > 1.6 && r >= pr.r0 && r + 1 < R && pr.razao[r + 1] > 1) perto = r;
+    }
+    if (melhor >= 0) pr.ultimoMov = pr.n;
+    return { calibrando: false, progresso: 1,
+             alvo: melhor >= 0 ? { d: melhor * dr, forca: mv } : null,
+             perto: perto >= 0 ? perto * dr : null };
+  }
+
+  // Respiração: procura a faixa de distância que oscila devagar e mede o período
+  function respiracao(pr) {
+    const fps = pr.fps, W = Math.min(pr.hN, Math.round(fps * 18));
+    if (W < fps * 10) return null;
+    const idx = k => (pr.hPos - W + k + pr.H) % pr.H;
+    let melhor = -1, ms = 0;
+    for (let r = pr.r0 + 5; r < pr.rMax; r += 2) {
+      let mr = 0, mi = 0;
+      for (let k = 0; k < W; k++) { mr += pr.hre[idx(k)][r]; mi += pr.him[idx(k)][r]; }
+      mr /= W; mi /= W;
+      let e = 0; for (let k = 0; k < W; k++) e += (pr.hre[idx(k)][r] - mr) ** 2 + (pr.him[idx(k)][r] - mi) ** 2;
+      e = e / W * ganho(r * pr.dr) ** 2;
+      if (e > ms) { ms = e; melhor = r; }
+    }
+    if (melhor < 0) return null;
+    // fase do eco em volta do centro → deslocamento do peito (mm)
+    let mr = 0, mi = 0; for (let k = 0; k < W; k++) { mr += pr.hre[idx(k)][melhor]; mi += pr.him[idx(k)][melhor]; }
+    mr /= W; mi /= W;
+    const fase = new Float64Array(W); let ant = 0, acum = 0;
+    for (let k = 0; k < W; k++) {
+      const f = Math.atan2(pr.him[idx(k)][melhor] - mi, pr.hre[idx(k)][melhor] - mr);
+      if (k) { let d = f - ant; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; acum += d; }
+      ant = f; fase[k] = acum;
+    }
+    // remove tendência linear
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let k = 0; k < W; k++) { sx += k; sy += fase[k]; sxx += k * k; sxy += k * fase[k]; }
+    const inc = (W * sxy - sx * sy) / (W * sxx - sx * sx || 1), b0 = (sy - inc * sx) / W;
+    const mm = new Float64Array(W), esc = pr.lambda / (4 * Math.PI) * 1000;
+    for (let k = 0; k < W; k++) mm[k] = (fase[k] - inc * k - b0) * esc;
+    // autocorrelação entre 1,5 s e 7,5 s (8 a 40 respirações por minuto)
+    let v0 = 0; for (let k = 0; k < W; k++) v0 += mm[k] * mm[k];
+    let bl = 0, bc = 0;
+    for (let lag = Math.round(fps * 1.5); lag <= Math.min(Math.round(fps * 7.5), W - 10); lag++) {
+      let s = 0; for (let k = 0; k + lag < W; k++) s += mm[k] * mm[k + lag];
+      const c = s / (v0 || 1) * W / (W - lag);
+      if (c > bc) { bc = c; bl = lag; }
+    }
+    return { bpm: bl ? 60 * fps / bl : 0, conf: bc, d: melhor * pr.dr, serie: mm, parado: pr.n - pr.ultimoMov > fps * 4 };
+  }
+
+  // ---- Demonstração: perfis sintéticos com alguém andando e alguém respirando ----
+  function criarDemo(R, dr) { return { t: 0, R, dr, clutter: Array.from({ length: R }, (_, r) => [Math.random() - 0.5, Math.random() - 0.5].map(v => v * 0.02 / Math.max(r * dr, 0.2) ** 2)), fps: 48000 / 2048, lambda: C / 19000 }; }
+  function passoDemo(dm, pre, pim) {
+    dm.t += 1 / dm.fps;
+    const t = dm.t, ciclo = t % 40, refl = [];
+    if (t > 5 && ciclo < 16) refl.push({ d: 1.7 + 0.95 * Math.sin(t * 0.55), a: 0.018 });                    // pessoa andando
+    refl.push({ d: 0.85 + 0.004 * Math.sin(2 * Math.PI * 0.24 * t), a: 0.03 });                                    // pessoa respirando (≈14/min)
+    for (let r = 0; r < dm.R; r++) {
+      const d = r * dm.dr; let xr = dm.clutter[r][0], xi = dm.clutter[r][1];
+      for (const q of refl) {
+        const env = q.a / Math.max(q.d, 0.3) ** 2 * Math.exp(-(((d - q.d) / 0.045) ** 2));
+        const ph = 4 * Math.PI * (q.d - d) / dm.lambda;
+        xr += env * Math.cos(ph); xi += env * Math.sin(ph);
+      }
+      pre[r] = xr + (Math.random() - 0.5) * 0.0012; pim[r] = xi + (Math.random() - 0.5) * 0.0012;
+    }
+  }
+
+  return { fft, criar, perfil, criarProcessador, processar, iniciarCalibracao, respiracao, criarDemo, passoDemo, C };
+})();
+
+
+
+</script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const fmt = (n, d = 1) => n.toFixed(d).replace('.', ',');
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const MONO = 'ui-monospace, "SF Mono", Menlo, monospace';
+const servidoPeloSensor = location.protocol === 'http:' && /^(\d+\.){3}\d+$|^localhost$|\.local$/.test(location.hostname);
+
+// ---------- Cores ----------
+function cor(v, a = 1) {                 // 0 calmo (ciano) · 1 limiar (âmbar) · 1,6+ forte (vermelho)
+  const p = [[104, 168, 44], [214, 146, 30], [212, 80, 52]];
+  const t = clamp(v, 0, 1.6);
+  const [c1, c2, k] = t < 1 ? [p[0], p[1], t] : [p[1], p[2], (t - 1) / 0.6];
+  const m = i => Math.round(c1[i] + (c2[i] - c1[i]) * k);
+  return `rgba(${m(0)},${m(1)},${m(2)},${a})`;
+}
+const LUT = (() => {                      // paleta térmica do mapa de calor (RGBA por nível 0..255)
+  const stops = [[0, 150, 200, 90, 0], [0.22, 104, 168, 44, 0.34], [0.5, 214, 146, 30, 0.62], [0.78, 212, 80, 52, 0.84], [1, 140, 36, 24, 0.95]];
+  const t = new Uint8ClampedArray(256 * 4);
+  for (let i = 0; i < 256; i++) {
+    const v = i / 255; let k = 0; while (k < stops.length - 2 && v > stops[k + 1][0]) k++;
+    const a = stops[k], b = stops[k + 1], f = (v - a[0]) / (b[0] - a[0]);
+    for (let c = 0; c < 4; c++) t[i * 4 + c] = c < 3 ? a[c + 1] + (b[c + 1] - a[c + 1]) * f : 255 * (a[4] + (b[4] - a[4]) * f);
+  }
+  return t;
+})();
+
+// ---------- Canvas com nitidez em telas Retina ----------
+function prepararCanvas(c, alturaCss) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const w = c.clientWidth || c.parentElement.clientWidth;
+  const h = alturaCss != null ? alturaCss : c.clientHeight;
+  if (alturaCss != null) c.style.height = h + 'px';
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { g, w, h };
+}
+
+// ================= DESENHO DA SALA (usado pelo laboratório e pelo ao vivo com ESP32) =================
+function criarVistaSala(canvas) {
+  const heat = document.createElement('canvas'); let img = null;
+  const vista = { canvas, g: null, w: 0, h: 0, ox: 0, oy: 0, k: 1, sala: null };
+  vista.ajustar = sala => {
+    vista.sala = sala;
+    const w = canvas.parentElement.clientWidth, padX = 30, padT = 60, padB = 36;
+    const k = (w - padX * 2) / sala.W, h = Math.round(sala.H * k + padT + padB);
+    const r = prepararCanvas(canvas, h);
+    Object.assign(vista, { g: r.g, w: r.w, h: r.h, ox: padX, oy: padT, k });
+    heat.width = sala.nx; heat.height = sala.ny; img = heat.getContext('2d').createImageData(sala.nx, sala.ny);
+  };
+  vista.X = x => vista.ox + x * vista.k;
+  vista.Y = y => vista.oy + y * vista.k;
+  vista.paraMetros = (cx, cy) => ({ x: (cx - vista.ox) / vista.k, y: (cy - vista.oy) / vista.k });
+
+  vista.desenhar = ({ mapa, limiar, ylinks, sigma, reais, trilhas, opc, t, calibrando }) => {
+    const { g, w, h, sala } = vista; if (!g || !sala) return;
+    const X = vista.X, Y = vista.Y, k = vista.k;
+    g.clearRect(0, 0, w, h);
+    // piso
+    g.fillStyle = '#f8f9f1'; g.fillRect(X(0), Y(0), sala.W * k, sala.H * k);
+    g.strokeStyle = '#e6eadb'; g.lineWidth = 1;
+    g.font = '600 9.5px ' + MONO; g.fillStyle = '#98a38e';
+    for (let m = 0; m <= sala.W + 1e-6; m++) { g.beginPath(); g.moveTo(X(m), Y(0)); g.lineTo(X(m), Y(sala.H)); g.stroke(); g.textAlign = 'center'; g.fillText(m, X(m), Y(0) - 9); }
+    for (let m = 0; m <= sala.H + 1e-6; m++) { g.beginPath(); g.moveTo(X(0), Y(m)); g.lineTo(X(sala.W), Y(m)); g.stroke(); g.textAlign = 'right'; g.fillText(m, X(0) - 10, Y(m) + 3); }
+    g.textAlign = 'left'; g.fillText('m', X(sala.W) + 7, Y(0) - 9);
+
+    // mapa de calor
+    if (opc.calor && mapa && !calibrando) {
+      const d = img.data, esc = limiar * 2.4;
+      for (let p = 0; p < sala.P; p++) {
+        const v = clamp((mapa[p] - 1.5) / esc, 0, 1), i = (v * 255) | 0;
+        d[p * 4] = LUT[i * 4]; d[p * 4 + 1] = LUT[i * 4 + 1]; d[p * 4 + 2] = LUT[i * 4 + 2]; d[p * 4 + 3] = LUT[i * 4 + 3];
+      }
+      heat.getContext('2d').putImageData(img, 0, 0);
+      g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+      g.drawImage(heat, X(0), Y(0), sala.W * k, sala.H * k); g.restore();
+    }
+    // paredes
+    g.strokeStyle = '#b8c5a6'; g.lineWidth = 2; g.strokeRect(X(0), Y(0), sala.W * k, sala.H * k);
+
+    // links
+    if (opc.links && ylinks) {
+      for (let l = 0; l < sala.L; l++) {
+        const lk = sala.links[l], A = sala.nos[lk.a], B = sala.nos[lk.b];
+        const u = clamp((ylinks[l] - sigma * 1.5) / (sigma * 5), 0, 1);
+        g.strokeStyle = u > 0 ? cor(0.6 + u, 0.18 + 0.7 * u) : 'rgba(95,158,34,0.16)';
+        g.lineWidth = u > 0 ? 1 + 1.4 * u : 1;
+        g.beginPath(); g.moveTo(X(A.x), Y(A.y)); g.lineTo(X(B.x), Y(B.y)); g.stroke();
+      }
+    }
+    // sensores
+    for (const n of sala.nos) {
+      g.beginPath(); g.arc(X(n.x), Y(n.y), 5.5, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
+      g.lineWidth = 2; g.strokeStyle = '#5f9e22'; g.stroke();
+      const pulso = (t / 900 + n.x + n.y) % 1;
+      g.beginPath(); g.arc(X(n.x), Y(n.y), 5.5 + pulso * 9, 0, Math.PI * 2); g.lineWidth = 1; g.strokeStyle = `rgba(95,158,34,${0.35 * (1 - pulso)})`; g.stroke();
+    }
+    // pessoas reais (fantasma)
+    if (opc.real && reais) for (const p of reais) {
+      if (p.x < 0) continue;
+      g.save(); g.setLineDash([4, 4]); g.beginPath(); g.arc(X(p.x), Y(p.y), 0.25 * k, 0, Math.PI * 2);
+      g.strokeStyle = 'rgba(38,51,31,0.55)'; g.lineWidth = 1.3; g.stroke(); g.restore();
+      g.fillStyle = 'rgba(38,51,31,0.6)'; g.textAlign = 'center'; g.fillText(p.arrastando ? 'você' : 'real', X(p.x), Y(p.y) + 0.25 * k + 13);
+      if (p.arrastando) { g.beginPath(); g.arc(X(p.x), Y(p.y), 0.25 * k + 8, 0, Math.PI * 2); g.strokeStyle = 'rgba(38,51,31,0.3)'; g.lineWidth = 6; g.stroke(); }
+    }
+    // estimativas
+    const rotulos = [];
+    if (!calibrando && trilhas) for (const tr of trilhas) {
+      if (opc.rastro) for (let i = 0; i < tr.rastro.length; i++) {
+        const q = tr.rastro[i], a = (i + 1) / tr.rastro.length;
+        g.beginPath(); g.arc(X(q.x), Y(q.y), 1.2 + 2 * a, 0, Math.PI * 2); g.fillStyle = `rgba(212,87,58,${0.45 * a})`; g.fill();
+      }
+      if (!tr.visivel) continue;
+      const x = X(tr.x), y = Y(tr.y), pul = 0.5 + 0.5 * Math.sin(t / 180);
+      g.strokeStyle = 'rgba(212,87,58,0.18)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(X(0), y); g.lineTo(X(sala.W), y); g.moveTo(x, Y(0)); g.lineTo(x, Y(sala.H)); g.stroke();
+      g.beginPath(); g.arc(x, y, 11 + pul * 3, 0, Math.PI * 2); g.strokeStyle = 'rgba(212,87,58,0.9)'; g.lineWidth = 2; g.stroke();
+      g.beginPath(); g.arc(x, y, 3.5, 0, Math.PI * 2); g.fillStyle = '#d4573a'; g.fill();
+      g.fillStyle = '#8c2f1b'; g.font = '700 10.5px ' + MONO;
+      const rot = `${tr.nome} ${fmt(tr.x, 2)} × ${fmt(tr.y, 2)} m`, lr = g.measureText(rot).width;
+      const lx = clamp(x + 16, X(0) + 4, X(sala.W) - lr - 4);
+      let ly = y - 16 < Y(0) + 12 ? y + 26 : y - 16;
+      for (const r of rotulos) if (Math.abs(r.y - ly) < 15 && lx < r.x + r.w && r.x < lx + lr) ly = r.y + 16;
+      rotulos.push({ x: lx, y: ly, w: lr });
+      g.textAlign = 'left'; g.fillText(rot, lx, ly);
+    }
+  };
+  return vista;
+}
+
+// ================= LABORATÓRIO =================
+const LAB = {
+  W: 6, H: 4.5, N: 8, nPessoas: 1, sigma: 1.0,
+  opc: { calor: true, links: true, real: true, rastro: true },
+  auto: true, sala: null, ruido: null, y: null, ybuf: [], ys: null, mapa: null,
+  calib: null, base: null, sigEst: 1, limiar: 4.5,
+  pessoas: [], trilhas: [], erros: [], passos: 0
+};
+const vistaLab = criarVistaSala($('sala'));
+
+function novaPessoa(i) {
+  return { x: -0.8, y: 1 + i, alvo: null, vel: 0.75 + 0.15 * i, pausaAte: 0, arrastando: false, dentro: false };
+}
+function montarLab() {
+  const s = RTI.criar({ W: LAB.W, H: LAB.H, nos: RTI.posicionarSensores(LAB.W, LAB.H, LAB.N), res: 0.25, lambda: 0.2, alfa: 8, beta: 0.6 });
+  LAB.sala = s; LAB.ruido = Simulador.criarRuido(s.L); LAB.y = new Float64Array(s.L);
+  LAB.ys = new Float64Array(s.L); LAB.mapa = new Float64Array(s.P); LAB.ybuf = [];
+  while (LAB.pessoas.length < LAB.nPessoas) LAB.pessoas.push(novaPessoa(LAB.pessoas.length));
+  LAB.pessoas.length = LAB.nPessoas;
+  vistaLab.ajustar(s);
+  iniciarCalibracaoLab();
+  $('hudRede').textContent = `${LAB.N} SENSORES · ${s.L} LINKS`;
+}
+function iniciarCalibracaoLab() {
+  LAB.calib = { n: 0, soma: new Float64Array(LAB.sala.L), soma2: new Float64Array(LAB.sala.L) };
+  LAB.trilhas = []; LAB.erros = [];
+  for (const p of LAB.pessoas) { p.x = -0.8; p.dentro = false; p.alvo = null; p.arrastando = false; p.pausaAte = 0; }
+  $('labCalib').classList.remove('oculto');
+}
+
+function moverPessoas(dt, agora) {
+  const m = 0.45;
+  LAB.pessoas.forEach((p, i) => {
+    if (p.arrastando) return;
+    if (!p.dentro) { p.x = m; p.y = clamp(1.2 + i * 2, m, LAB.H - m); p.dentro = true; p.alvo = null; }
+    if (!LAB.auto || agora < p.pausaAte) return;
+    if (!p.alvo) p.alvo = { x: m + Simulador.rnd() * (LAB.W - 2 * m), y: m + Simulador.rnd() * (LAB.H - 2 * m) };
+    const dx = p.alvo.x - p.x, dy = p.alvo.y - p.y, d = Math.hypot(dx, dy), passo = p.vel * dt;
+    if (d <= passo) {
+      p.x = p.alvo.x; p.y = p.alvo.y; p.alvo = null;
+      if (Simulador.rnd() < 0.45) p.pausaAte = agora + 1500 + Simulador.rnd() * 2500;   // às vezes para (e continua sendo visto)
+    } else { p.x += dx / d * passo; p.y += dy / d * passo; }
+  });
+}
+
+function passoLab(agora) {
+  const s = LAB.sala, calibrando = LAB.calib !== null;
+  if (!calibrando) moverPessoas(0.05, agora);
+  const presentes = calibrando ? [] : LAB.pessoas.filter(p => p.dentro);
+  Simulador.medir(s, presentes, LAB.sigma, LAB.ruido, LAB.y);
+
+  // média móvel de 3 leituras (150 ms)
+  LAB.ybuf.push(Float64Array.from(LAB.y)); if (LAB.ybuf.length > 3) LAB.ybuf.shift();
+  for (let l = 0; l < s.L; l++) { let t = 0; for (const b of LAB.ybuf) t += b[l]; LAB.ys[l] = t / LAB.ybuf.length; }
+
+  if (calibrando) {
+    const c = LAB.calib; c.n++;
+    for (let l = 0; l < s.L; l++) { c.soma[l] += LAB.ys[l]; c.soma2[l] += LAB.ys[l] ** 2; }
+    if (c.n >= 60) {                                  // 3 s de sala vazia
+      LAB.base = new Float64Array(s.L); let v = 0;
+      for (let l = 0; l < s.L; l++) { const m = c.soma[l] / c.n; LAB.base[l] = m; v += Math.max(c.soma2[l] / c.n - m * m, 1e-4); }
+      LAB.sigEst = Math.sqrt(v / s.L);
+      LAB.calib = null; $('labCalib').classList.add('oculto');
+    }
+    return;
+  }
+  for (let l = 0; l < s.L; l++) LAB.ys[l] -= LAB.base[l];
+  RTI.reconstruir(s, LAB.ys, LAB.sigEst, LAB.mapa);
+  const achados = RTI.localizar(s, LAB.mapa, { limiar: LAB.limiar, maxPessoas: LAB.nPessoas });
+  rastrear(LAB.trilhas, achados, LAB.nPessoas);
+
+  // erro: cada pessoa real ↔ estimativa visível mais próxima
+  const vis = LAB.trilhas.filter(t => t.visivel);
+  for (const p of LAB.pessoas) {
+    if (!p.dentro || !vis.length) continue;
+    const e = Math.min(...vis.map(t => Math.hypot(t.x - p.x, t.y - p.y)));
+    LAB.erros.push(e);
+  }
+  while (LAB.erros.length > 200 * LAB.nPessoas) LAB.erros.shift();
+}
+
+// Rastreador simples: associa cada pico à trilha mais próxima e suaviza o movimento
+function rastrear(trilhas, achados, max) {
+  const livres = achados.slice();
+  for (const tr of trilhas) {
+    let melhor = -1, md = 1.3;
+    livres.forEach((a, i) => { const d = Math.hypot(a.x - tr.x, a.y - tr.y); if (d < md) { md = d; melhor = i; } });
+    if (melhor >= 0) {
+      const a = livres.splice(melhor, 1)[0], f = 0.38;
+      tr.x += (a.x - tr.x) * f; tr.y += (a.y - tr.y) * f; tr.forca = a.forca; tr.perdas = 0; tr.vistos++;
+    } else tr.perdas++;
+  }
+  for (const a of livres) if (trilhas.length < max) trilhas.push({ x: a.x, y: a.y, forca: a.forca, perdas: 0, vistos: 1, rastro: [], nome: '' });
+  for (let i = trilhas.length - 1; i >= 0; i--) if (trilhas[i].perdas > 12) trilhas.splice(i, 1);
+  // duas trilhas grudadas no mesmo ponto = uma só pessoa vista duas vezes
+  for (let i = trilhas.length - 1; i > 0; i--) for (let j = 0; j < i; j++)
+    if (Math.hypot(trilhas[i].x - trilhas[j].x, trilhas[i].y - trilhas[j].y) < 0.5) { trilhas.splice(i, 1); break; }
+  trilhas.forEach((tr, i) => {
+    tr.nome = trilhas.length > 1 ? 'P' + (i + 1) : '';
+    tr.visivel = tr.vistos >= 3 && tr.perdas < 6;
+    if (tr.visivel) { tr.rastro.push({ x: tr.x, y: tr.y }); if (tr.rastro.length > 45) tr.rastro.shift(); }
+  });
+}
+
+function atualizarPainelLab() {
+  const calibrando = LAB.calib !== null, vis = LAB.trilhas.filter(t => t.visivel);
+  const pill = $('pill');
+  if (calibrando) { pill.textContent = 'Calibrando'; pill.className = 'pill calibrando'; }
+  else if (vis.length) { pill.textContent = vis.length > 1 ? vis.length + ' pessoas' : 'Pessoa detectada'; pill.className = 'pill presenca'; }
+  else { pill.textContent = 'Sala vazia'; pill.className = 'pill vazio'; }
+  $('fonte').textContent = 'simulação · algoritmo RTI';
+
+  const t1 = vis[0];
+  $('nPos').innerHTML = t1 ? `${fmt(t1.x, 2)} × ${fmt(t1.y, 2)} <small>m</small>` : '—';
+  $('hudPos').textContent = t1 ? `X ${fmt(t1.x, 2)} M\nY ${fmt(t1.y, 2)} M` : (calibrando ? 'CALIBRANDO' : 'SEM ALVO');
+  $('hudPos').style.whiteSpace = 'pre';
+  const em = LAB.erros.length ? LAB.erros.reduce((a, b) => a + b, 0) / LAB.erros.length : null;
+  $('nErro').innerHTML = em != null && LAB.opc.real ? `${Math.round(em * 100)} <small>cm</small>` : '—';
+  $('hudErro').textContent = em != null && LAB.opc.real ? `ERRO ${Math.round(em * 100)} CM` : '';
+  const conf = t1 ? clamp((t1.forca - LAB.limiar) / (LAB.limiar * 1.5), 0, 1) * 0.75 + 0.25 : 0;
+  $('nConf').innerHTML = t1 ? `${Math.round(conf * 100)}<small>%</small>` : '—';
+  let cortados = 0; if (!calibrando) for (let l = 0; l < LAB.sala.L; l++) if (LAB.ys[l] > LAB.sigEst * 3) cortados++;
+  $('nLinks').innerHTML = calibrando ? '—' : `${cortados} <small>de ${LAB.sala.L}</small>`;
+  $('linksTxt').textContent = calibrando ? 'calibrando' : `${cortados} acima de 3σ`;
+}
+
+function desenharBarras() {
+  const c = $('barras'), { g, w, h } = prepararCanvas(c, 84);
+  g.clearRect(0, 0, w, h);
+  const s = LAB.sala, L = s.L, sig = LAB.sigEst, topo = Math.max(sig * 10, 6);
+  const bw = w / L, calibrando = LAB.calib !== null;
+  for (let l = 0; l < L; l++) {
+    const v = calibrando ? 0 : Math.max(LAB.ys[l], 0), alt = Math.max(2, v / topo * (h - 6));
+    g.fillStyle = cor(clamp((v - sig) / (sig * 3), 0, 1.6), v > sig * 3 ? 1 : 0.55);
+    g.fillRect(l * bw + 0.5, h - alt, Math.max(bw - 1.5, 1), alt);
+  }
+  const y = h - (sig * 3) / topo * (h - 6);
+  g.setLineDash([4, 4]); g.strokeStyle = 'rgba(38,51,31,.45)'; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#7a8870'; g.font = '10px ' + MONO; g.textAlign = 'right'; g.fillText('3σ', w - 2, y - 4);
+}
+
+// Toque/arraste no mapa
+(() => {
+  const c = $('sala'); let ativo = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return vistaLab.paraMetros(e.clientX - r.left, e.clientY - r.top); };
+  c.addEventListener('pointerdown', e => {
+    if (LAB.calib) return;
+    const m = pos(e); let md = Infinity;
+    for (const p of LAB.pessoas) { const d = Math.hypot(p.x - m.x, p.y - m.y); if (d < md) { md = d; ativo = p; } }
+    if (!ativo) return;
+    ativo.arrastando = true; ativo.dentro = true; ativo.alvo = null;
+    ativo.x = clamp(m.x, 0.2, LAB.W - 0.2); ativo.y = clamp(m.y, 0.2, LAB.H - 0.2);
+    c.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  c.addEventListener('pointermove', e => {
+    if (!ativo) return; const m = pos(e);
+    ativo.x = clamp(m.x, 0.2, LAB.W - 0.2); ativo.y = clamp(m.y, 0.2, LAB.H - 0.2); e.preventDefault();
+  });
+  const soltar = () => { if (!ativo) return; ativo.arrastando = false; ativo.pausaAte = performance.now() + 4000; ativo = null; };
+  c.addEventListener('pointerup', soltar); c.addEventListener('pointercancel', soltar);
+})();
+
+function segmentado(id, aoMudar) {
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('ativa', x === b));
+    aoMudar(Number(b.dataset.v));
+  });
+}
+segmentado('segN', v => { LAB.N = v; montarLab(); });
+segmentado('segP', v => { LAB.nPessoas = v; montarLab(); });
+$('ruido').addEventListener('input', e => { LAB.sigma = Number(e.target.value); $('ruidoOut').textContent = fmt(LAB.sigma) + ' dB'; });
+$('ruido').addEventListener('change', () => iniciarCalibracaoLab());
+$('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  LAB.opc[b.dataset.k] = !LAB.opc[b.dataset.k]; b.classList.toggle('ativa', LAB.opc[b.dataset.k]);
+});
+$('btnAuto').onclick = () => { LAB.auto = !LAB.auto; $('btnAuto').textContent = LAB.auto ? 'Pausar passeio' : 'Retomar passeio'; };
+$('btnLabCalib').onclick = () => iniciarCalibracaoLab();
+
+// ================= AO VIVO =================
+const VIVO = { dados: null, conectado: false, falhas: 0, emAndamento: false, suave: 0, estadoAnterior: '', assinatura: '',
+               som: false, audio: null, sala: null, rti: null };
+const FATORES = [6, 4.5, 3, 2, 1.5], NOMES = ['mínima', 'baixa', 'média', 'alta', 'máxima'];
+const vistaVivo = criarVistaSala($('salaVivo'));
+
+async function cicloVivo() {
+  if (!servidoPeloSensor || aba !== 'vivo' || document.hidden) { setTimeout(cicloVivo, 400); return; }
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 2500), t0 = performance.now();
+  try {
+    const r = await fetch('/dados?t=' + Date.now(), { cache: 'no-store', signal: ctl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    VIVO.dados = await r.json(); VIVO.falhas = 0; VIVO.conectado = true;
+    $('latencia').textContent = Math.round(performance.now() - t0) + ' ms';
+    aplicarVivo();
+  } catch (e) {
+    VIVO.falhas++;
+    if (VIVO.falhas >= 3) VIVO.conectado = false;
+  } finally {
+    clearTimeout(timer);
+    const c = $('conexao');
+    c.textContent = VIVO.conectado ? '● conectado ao sensor' : VIVO.falhas ? '● sem resposta, tentando de novo…' : 'conectando…';
+    c.className = 'conexao ' + (VIVO.conectado ? 'ok' : VIVO.falhas ? 'ruim' : '');
+    setTimeout(cicloVivo, VIVO.conectado ? 150 : 1000);
+  }
+}
+
+function aplicarVivo() {
+  const d = VIVO.dados; if (!d) return;
+  if (Array.isArray(d.links) && Array.isArray(d.nos) && d.nos.length >= 3) { aplicarVivoRTI(d); return; }
+  $('visorIntens').classList.remove('oculto-total'); $('visorSalaVivo').classList.add('oculto-total');
+  ['cartaoOnda', 'cartaoFaixa'].forEach(id => $(id).classList.remove('oculto-total'));
+  document.querySelectorAll('.soMac').forEach(el => el.classList.remove('oculto-total'));
+  const textos = { calibrando: 'Calibrando', parado: 'Parado', movimento: 'Movimento' };
+  if (aba === 'vivo') { $('pill').textContent = textos[d.estado] || '—'; $('pill').className = 'pill ' + d.estado; $('fonte').textContent = 'sensor: ' + (d.fonte || 'conectado'); }
+  $('vivoCalib').classList.toggle('oculto', d.estado !== 'calibrando');
+  $('anel').setAttribute('stroke-dashoffset', String(201 * (1 - (d.progresso || 0))));
+  $('rssiTxt').textContent = Math.round(d.rssi) + ' dBm'; $('hudRssi').textContent = Math.round(d.rssi) + ' dBm';
+  $('agitTxt').textContent = d.limiar ? `${fmt(d.agitacao, 2)} / ${fmt(d.limiar, 2)}` : fmt(d.agitacao, 2);
+  $('sEventos').textContent = d.totalEventos ?? 0;
+  $('sRuido').textContent = d.ruido ? Math.round(d.ruido) : '—';
+  $('sTaxa').textContent = d.taxa ? Math.round(d.taxa) : '—';
+  $('hudHora').textContent = new Date().toLocaleTimeString('pt-BR');
+  const idx = FATORES.reduce((m, f, i) => Math.abs(f - d.fator) < Math.abs(FATORES[m] - d.fator) ? i : m, 0);
+  if (document.activeElement !== $('sens')) { $('sens').value = idx + 1; $('sensOut').textContent = NOMES[idx]; }
+  if (d.estado === 'movimento' && VIVO.estadoAnterior !== 'movimento') bip();
+  VIVO.estadoAnterior = d.estado;
+  const ev = d.eventos || [], ass = (d.totalEventos || 0) + '|' + (ev[0] ? ev[0].hora : '');
+  if (ass !== VIVO.assinatura) {
+    VIVO.assinatura = ass;
+    $('logTotal').textContent = ev.length === 1 ? '1 recente' : ev.length ? ev.length + ' recentes' : '';
+    $('log').innerHTML = ev.length
+      ? ev.map(e => `<li><span>${e.hora}</span><span>${fmt(e.duracao)} s · ${fmt(e.pico)}× o limiar</span></li>`).join('')
+      : '<li class="vazio">Nenhum movimento ainda</li>';
+  }
+}
+
+// Dados de vários sensores (ESP32): { sala:{w,h}, nos:[{id,x,y}], links:[{a,b,rssi}] }
+function aplicarVivoRTI(d) {
+  $('visorIntens').classList.add('oculto-total'); $('visorSalaVivo').classList.remove('oculto-total');
+  ['cartaoOnda', 'cartaoFaixa'].forEach(id => $(id).classList.add('oculto-total'));
+  document.querySelectorAll('.soMac').forEach(el => el.classList.add('oculto-total'));
+  $('vivoDica').textContent = 'Posição calculada pelo algoritmo RTI a partir dos sensores reais.';
+  const chave = JSON.stringify([d.sala, d.nos]);
+  if (!VIVO.rti || VIVO.rti.chave !== chave) {
+    const W = d.sala?.w || 5, H = d.sala?.h || 4;
+    const sala = RTI.criar({ W, H, nos: d.nos.map(n => ({ id: n.id, x: n.x, y: n.y })), res: 0.25, lambda: 0.2, alfa: 8, beta: 0.6 });
+    const idx = new Map(); sala.links.forEach((lk, l) => { idx.set(sala.nos[lk.a].id + '|' + sala.nos[lk.b].id, l); idx.set(sala.nos[lk.b].id + '|' + sala.nos[lk.a].id, l); });
+    VIVO.rti = { chave, sala, idx, calib: { n: 0, soma: new Float64Array(sala.L), soma2: new Float64Array(sala.L), cont: new Uint32Array(sala.L) },
+                 base: null, sig: 1, y: new Float64Array(sala.L), mapa: new Float64Array(sala.P), trilhas: [],
+                 suave: new Float64Array(sala.L).fill(NaN), inicio: performance.now() };
+    vistaVivo.ajustar(sala);
+  }
+  const R = VIVO.rti, s = R.sala;
+  // suavização leve de cada link (a mesma usada na calibração, para o ruído medido bater)
+  for (const lk of d.links) {
+    const l = R.idx.get(lk.a + '|' + lk.b);
+    if (l !== undefined && Number.isFinite(lk.rssi)) R.suave[l] = Number.isNaN(R.suave[l]) ? lk.rssi : R.suave[l] * 0.4 + lk.rssi * 0.6;
+  }
+  if (R.calib) {
+    const c = R.calib; c.n++;
+    for (let l = 0; l < s.L; l++) if (!Number.isNaN(R.suave[l])) { c.soma[l] += R.suave[l]; c.soma2[l] += R.suave[l] ** 2; c.cont[l]++; }
+    if (performance.now() - R.inicio > 6000 && c.n >= 20) {     // 6 s de sala vazia
+      R.base = new Float64Array(s.L); let v = 0, k = 0;
+      for (let l = 0; l < s.L; l++) if (c.cont[l] > 5) { const m = c.soma[l] / c.cont[l]; R.base[l] = m; v += Math.max(c.soma2[l] / c.cont[l] - m * m, 0.05); k++; } else R.base[l] = NaN;
+      R.sig = Math.sqrt(v / Math.max(k, 1)); R.calib = null;
+    }
+  } else {
+    for (let l = 0; l < s.L; l++) { const yv = R.base[l] - R.suave[l]; R.y[l] = Number.isFinite(yv) ? yv : 0; }
+    RTI.reconstruir(s, R.y, R.sig, R.mapa);
+    rastrear(R.trilhas, RTI.localizar(s, R.mapa, { limiar: 4.5, maxPessoas: 2 }), 2);
+  }
+  $('vivoCalibSala').classList.toggle('oculto', !R.calib);
+  const vis = R.trilhas.filter(t => t.visivel);
+  if (aba === 'vivo') {
+    $('pill').textContent = R.calib ? 'Calibrando' : vis.length ? 'Pessoa detectada' : 'Sala vazia';
+    $('pill').className = 'pill ' + (R.calib ? 'calibrando' : vis.length ? 'presenca' : 'vazio');
+    $('fonte').textContent = `sensor: ${d.fonte || 'ESP32'} · ${s.nos.length} sensores`;
+  }
+  $('hudPosVivo').textContent = vis[0] ? `X ${fmt(vis[0].x, 2)} M\nY ${fmt(vis[0].y, 2)} M` : '';
+  $('hudPosVivo').style.whiteSpace = 'pre';
+}
+
+$('btnCalib').onclick = () => {
+  if (VIVO.rti) { VIVO.rti = null; return; }
+  fetch('/calibrar').catch(() => {});
+};
+$('sens').addEventListener('input', e => { $('sensOut').textContent = NOMES[e.target.value - 1]; });
+$('sens').addEventListener('change', e => fetch('/sens?v=' + FATORES[e.target.value - 1]).catch(() => {}));
+segmentado('segSom', v => {
+  VIVO.som = v === 1;
+  if (VIVO.som && !VIVO.audio) { try { VIVO.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (VIVO.som) bip();
+});
+function bip() {
+  if (!VIVO.som || !VIVO.audio) return;
+  try {
+    const a = VIVO.audio, o = a.createOscillator(), g = a.createGain();
+    o.frequency.value = 880; g.gain.setValueAtTime(0.0001, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, a.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.35);
+    o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + 0.4);
+  } catch (e) {}
+}
+
+function relativo(x) {
+  const d = VIVO.dados; if (!d || !d.limiar) return Math.min(x / 3, 0.6);
+  const base = Math.min(d.base || 0, d.limiar * 0.9);
+  return clamp((x - base) / (d.limiar - base), 0, 2);
+}
+function desenharCampo(t) {
+  const d = VIVO.dados;
+  const alvo = !d ? 0 : d.estado === 'calibrando' ? Math.min(d.agitacao / 3, 0.6) : relativo(d.agitacao);
+  desenharCampoEm(t, $('campo'), VIVO, alvo, $('hudVal'));
+}
+function desenharCampoEm(t, c, est, alvo, hud) {
+  if (!c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c), cx = w / 2, cy = h / 2;
+  est.suave += (alvo - est.suave) * 0.07; const a = est.suave;
+  g.fillStyle = 'rgba(251,250,244,0.30)'; g.fillRect(0, 0, w, h);
+  for (let k = 0; k < 4; k++) {
+    const r = (t * 0.04 + k * w * 0.18) % (w * 0.72);
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.strokeStyle = cor(a, 0.1 * (1 - r / (w * 0.72)) + 0.02); g.lineWidth = 1.5; g.stroke();
+  }
+  const n = 22, passo = w / n, ts = t * 0.001;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const x0 = (i + 0.5) * passo, y0 = (j + 0.5) * passo, dx0 = x0 - cx, dy0 = y0 - cy, dist = Math.hypot(dx0, dy0) / w;
+    const onda = Math.sin(dist * 22 - ts * 3.2);
+    const t1 = Math.sin(ts * 1.7 + j * 0.55 + Math.sin(i * 0.37 + ts) * 2.1), t2 = Math.cos(ts * 1.3 + i * 0.48 + Math.cos(j * 0.31 - ts * 0.8) * 2.4);
+    const des = passo * (0.06 + 0.85 * a), nr = w * dist + 1;
+    g.beginPath(); g.arc(x0 + (t1 * 0.8 + onda * dx0 / nr * 0.5) * des, y0 + (t2 * 0.8 + onda * dy0 / nr * 0.5) * des, 1.1 + Math.min(a, 1.6) * 1.5 * (0.5 + 0.5 * t1), 0, Math.PI * 2);
+    g.fillStyle = cor(a + dist * 0.15, (0.25 + 0.55 * Math.min(a, 1) * (0.6 + 0.4 * onda)) * (1 - dist * 0.7)); g.fill();
+  }
+  const ang = (ts * 0.9) % (Math.PI * 2), gr = g.createLinearGradient(cx, cy, cx + Math.cos(ang) * w * 0.7, cy + Math.sin(ang) * w * 0.7);
+  gr.addColorStop(0, cor(a, 0)); gr.addColorStop(1, cor(a, 0.22));
+  g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, w * 0.72, ang - 0.35, ang); g.closePath(); g.fillStyle = gr; g.fill();
+  g.beginPath(); g.arc(cx, cy, 4, 0, Math.PI * 2); g.fillStyle = cor(a, 0.9); g.fill();
+  hud.textContent = Math.round(Math.min(a, 2) * 50) + '%'; hud.style.color = cor(a, 1);
+}
+function desenharOnda() {
+  const c = $('onda'); if (!c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c, 84); g.clearRect(0, 0, w, h);
+  const v = VIVO.dados?.hist || []; if (v.length < 2) return;
+  let lo = Math.min(...v), hi = Math.max(...v); if (hi - lo < 6) { const m = (hi + lo) / 2; lo = m - 3; hi = m + 3; }
+  const X = i => (i + 150 - v.length) / 149 * w, Y = x => h - 6 - (x - lo) / (hi - lo) * (h - 12);
+  g.strokeStyle = '#e1e5d5'; for (let k = 0; k <= 2; k++) { const y = 6 + k * (h - 12) / 2; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.beginPath(); v.forEach((x, i) => i ? g.lineTo(X(i), Y(x)) : g.moveTo(X(i), Y(x)));
+  g.strokeStyle = cor(VIVO.suave, 1); g.lineWidth = 2; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = '#7a8870'; g.font = '10px ' + MONO;
+  g.fillText(Math.round(hi) + ' dBm', 4, 14); g.fillText(Math.round(lo) + ' dBm', 4, h - 6);
+}
+function desenharFaixa() {
+  const c = $('faixa'); if (!c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c, 84); g.clearRect(0, 0, w, h);
+  const v = VIVO.dados?.histAgit || []; if (!v.length) return;
+  const lim = VIVO.dados.limiar || 0, topo = Math.max(lim * 2, ...v, 1), bw = w / 150, base = 150 - v.length;
+  v.forEach((x, i) => { const alt = Math.max(1.5, x / topo * (h - 4)); g.fillStyle = cor(relativo(x), lim && x > lim ? 1 : 0.65); g.fillRect((base + i) * bw, h - alt, Math.max(bw - 1, 1), alt); });
+  if (lim) {
+    const y = h - lim / topo * (h - 4);
+    g.setLineDash([5, 4]); g.strokeStyle = 'rgba(38,51,31,.55)'; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.setLineDash([]);
+  }
+}
+
+// ================= GRAVAÇÃO DO iPHONE (vinda do Atalhos) =================
+const GRAV = { v: [], ag: [], lim: 0, base: 0, ev: [], pos: 0, tocando: false, vel: 5, suave: 0, arrastando: false, sens: [4, 1.5], texto: '' };
+const SENS_GRAV = { 1: [5, 2.2], 2: [4, 1.5], 3: [3, 0.8] };
+const medA = a => a.reduce((s, x) => s + x, 0) / (a.length || 1);
+const dpA = a => { const m = medA(a); return Math.sqrt(medA(a.map(x => (x - m) ** 2))); };
+const mmss = seg => `${String(Math.floor(seg / 60)).padStart(2, '0')}:${String(Math.floor(seg % 60)).padStart(2, '0')}`;
+const CHAVE = 'csl-gravacao-iphone';
+
+// Aceita qualquer formato: números separados por vírgula, linha, ponto e vírgula, com ou sem horário
+function extrairLeituras(txt) {
+  return (String(txt).match(/-\d{2,3}(?:[.,]\d+)?/g) || []).map(x => Number(x.replace(',', '.'))).filter(x => x >= -110 && x <= -10);
+}
+
+function analisarGravacao(txt, salvar = true) {
+  const erro = $('gravErro');
+  if (!txt.trim()) { limparGravacao(); return; }
+  const v = extrairLeituras(txt);
+  if (v.length < 20) { erro.textContent = v.length ? `Achei só ${v.length} leituras; preciso de pelo menos 20 (20 segundos).` : 'Não achei leituras de sinal (números como -58) no texto colado.'; return; }
+  erro.textContent = '';
+  const n = v.length, ag = new Array(n).fill(0), CAL = Math.max(8, Math.min(15, Math.floor(n / 3)));
+  const curta = i => v.slice(Math.max(0, i - 4), i + 1);
+  // calibração (~15 s): referência do sinal e ruído normal do ambiente
+  for (let i = 2; i < CAL; i++) ag[i] = dpA(curta(i)) + 0.5 * Math.abs(medA(curta(i)) - medA(v.slice(0, i + 1)));
+  const cal = ag.slice(3, CAL);
+  const base = medA(cal), lim = Math.max(base + GRAV.sens[0] * dpA(cal), base + GRAV.sens[1]);
+  let ref = medA(v.slice(0, CAL));
+  const ev = []; let dentro = false, ini = 0, pico = 0, abaixo = 0;
+  for (let i = CAL; i < n; i++) {
+    const c = curta(i), m5 = medA(c);
+    ag[i] = dpA(c) + 0.5 * Math.abs(m5 - ref);
+    if (ag[i] > lim) { if (!dentro) { dentro = true; ini = i; pico = 0; } abaixo = 0; pico = Math.max(pico, ag[i]); }
+    else if (dentro) {
+      abaixo = ag[i] < lim * 0.8 ? abaixo + 1 : 0;
+      if (abaixo >= 2) { ev.push({ ini, fim: i - 1, pico: pico / lim }); dentro = false; }
+    }
+    if (!dentro) ref += (m5 - ref) * 0.03;          // a referência só se adapta com o ambiente calmo
+  }
+  if (dentro) ev.push({ ini, fim: n - 1, pico: pico / lim });
+  Object.assign(GRAV, { v, ag, lim, base, ev, pos: 0, tocando: true });
+  GRAV.texto = txt;
+  if (salvar) { try { localStorage.setItem(CHAVE, txt); } catch (e) {} }
+
+  $('gravVazio').classList.add('oculto');
+  $('gravInfo').textContent = `${n} leituras`;
+  $('gDur').textContent = mmss(n);
+  $('gEv').textContent = ev.length;
+  $('gVar').innerHTML = `${Math.round(Math.max(...v) - Math.min(...v))} <small>dB</small>`;
+  $('gLogTotal').textContent = ev.length ? `${ev.length} no total` : '';
+  $('gLog').innerHTML = ev.length
+    ? ev.map((e, k) => `<li data-i="${e.ini}"><span>${mmss(e.ini)}</span><span>${e.fim - e.ini + 1} s · ${fmt(e.pico)}× o limiar</span></li>`).join('')
+    : '<li class="vazio">Nenhum movimento acima do limiar</li>';
+  $('scrub').max = String(n - 1); $('scrub').value = '0';
+  $('btnPlay').textContent = '❚❚';
+}
+function limparGravacao() {
+  Object.assign(GRAV, { v: [], ag: [], ev: [], pos: 0, tocando: false });
+  try { localStorage.removeItem(CHAVE); } catch (e) {}
+  $('gravTexto').value = ''; $('gravErro').textContent = ''; $('gravInfo').textContent = '';
+  ['gDur', 'gEv', 'gVar'].forEach(id => $(id).textContent = '—');
+  $('gLog').innerHTML = '<li class="vazio">—</li>'; $('gLogTotal').textContent = '';
+  $('gravVazio').classList.remove('oculto'); $('btnPlay').textContent = '▶';
+}
+function exemploGravacao() {
+  const v = [];
+  for (let i = 0; i < 150; i++) {
+    let x = -61 + (Math.random() - 0.5) * 1.6;
+    if ((i > 40 && i < 48) || (i > 82 && i < 95) || (i > 120 && i < 125)) x += Math.sin(i * 1.3) * 4 + (Math.random() - 0.5) * 5 - 2;
+    v.push(Math.round(x));
+  }
+  return v.join(',');
+}
+const relGrav = x => GRAV.lim ? clamp((x - GRAV.base) / (GRAV.lim - GRAV.base), 0, 2) : 0;
+const emMovimento = i => GRAV.ev.some(e => i >= e.ini && i <= e.fim);
+
+function desenharGravGraficos() {
+  const n = GRAV.v.length, p = GRAV.pos;
+  for (const [id, tipo] of [['gOnda', 'onda'], ['gFaixa', 'faixa']]) {
+    const c = $(id); if (!c.clientWidth) continue;
+    const { g, w, h } = prepararCanvas(c, 92); g.clearRect(0, 0, w, h);
+    if (!n) continue;
+    const X = i => i / Math.max(n - 1, 1) * w;
+    g.fillStyle = 'rgba(212,87,58,0.13)';
+    for (const e of GRAV.ev) g.fillRect(X(e.ini), 0, Math.max(X(e.fim) - X(e.ini), 2), h);
+    if (tipo === 'onda') {
+      let lo = Math.min(...GRAV.v), hi = Math.max(...GRAV.v); if (hi - lo < 6) { const m = (hi + lo) / 2; lo = m - 3; hi = m + 3; }
+      const Y = x => h - 8 - (x - lo) / (hi - lo) * (h - 16);
+      g.beginPath(); GRAV.v.forEach((x, i) => i ? g.lineTo(X(i), Y(x)) : g.moveTo(X(i), Y(x)));
+      g.strokeStyle = '#5f9e22'; g.lineWidth = 1.6; g.lineJoin = 'round'; g.stroke();
+      g.fillStyle = '#7a8870'; g.font = '10px ' + MONO;
+      g.fillText(Math.round(hi) + ' dBm', 4, 12); g.fillText(Math.round(lo) + ' dBm', 4, h - 4);
+    } else {
+      const topo = Math.max(GRAV.lim * 2, ...GRAV.ag, 1), bw = w / n;
+      GRAV.ag.forEach((x, i) => { const alt = Math.max(1.5, x / topo * (h - 4)); g.fillStyle = cor(relGrav(x), x > GRAV.lim ? 1 : 0.6); g.fillRect(i * bw, h - alt, Math.max(bw - 0.6, 0.8), alt); });
+      const y = h - GRAV.lim / topo * (h - 4);
+      g.setLineDash([5, 4]); g.strokeStyle = 'rgba(38,51,31,.55)'; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.setLineDash([]);
+    }
+    g.strokeStyle = 'rgba(38,51,31,0.9)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(p), 0); g.lineTo(X(p), h); g.stroke();
+  }
+  if (n) {
+    const i = Math.min(Math.floor(p), n - 1);
+    $('gRssiTxt').textContent = GRAV.v[i] + ' dBm';
+    $('gAgitTxt').textContent = `${fmt(GRAV.ag[i], 2)} / ${fmt(GRAV.lim, 2)}`;
+  } else { $('gRssiTxt').textContent = '—'; $('gAgitTxt').textContent = '—'; }
+}
+function painelGrav() {
+  const n = GRAV.v.length, i = Math.min(Math.floor(GRAV.pos), Math.max(n - 1, 0));
+  const pill = $('pill');
+  if (!n) { pill.textContent = 'Sem gravação'; pill.className = 'pill'; $('fonte').textContent = 'gravação do iPhone (Atalhos)'; return; }
+  const mov = emMovimento(i), cal = i < Math.min(15, Math.floor(n / 3));
+  pill.textContent = cal ? 'Calibração' : mov ? 'Movimento' : 'Parado';
+  pill.className = 'pill ' + (cal ? 'calibrando' : mov ? 'movimento' : 'parado');
+  $('fonte').textContent = `replay · ${mmss(i)} de ${mmss(n)}`;
+  $('hudGravRssi').textContent = GRAV.v[i] + ' dBm';
+  $('hudGravTempo').textContent = `${mmss(i)} / ${mmss(n)}`;
+}
+
+$('gravTexto').addEventListener('input', e => analisarGravacao(e.target.value));
+$('btnExemplo').onclick = () => { const t = exemploGravacao(); $('gravTexto').value = t; analisarGravacao(t, false); };
+$('btnLimpar').onclick = () => limparGravacao();
+$('btnPlay').onclick = () => {
+  if (!GRAV.v.length) return;
+  if (!GRAV.tocando && GRAV.pos >= GRAV.v.length - 1) GRAV.pos = 0;
+  GRAV.tocando = !GRAV.tocando; $('btnPlay').textContent = GRAV.tocando ? '❚❚' : '▶';
+};
+$('scrub').addEventListener('input', e => { GRAV.pos = Number(e.target.value); GRAV.arrastando = true; });
+$('scrub').addEventListener('change', () => { GRAV.arrastando = false; });
+$('gLog').addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) { GRAV.pos = Math.max(0, Number(li.dataset.i) - 3); GRAV.tocando = true; $('btnPlay').textContent = '❚❚'; } });
+segmentado('segVel', v => { GRAV.vel = v; });
+segmentado('segSensGrav', v => { GRAV.sens = SENS_GRAV[v]; if (GRAV.texto) { const p = GRAV.pos; analisarGravacao(GRAV.texto, false); GRAV.pos = p; } });
+try { const salvo = localStorage.getItem(CHAVE); if (salvo) { $('gravTexto').value = salvo; analisarGravacao(salvo, false); GRAV.tocando = false; $('btnPlay').textContent = '▶'; } } catch (e) {}
+
+// ================= SONAR (interface) =================
+const SON = { ativo: false, demo: false, ctx: null, stream: null, src: null, gain: null, no: null, dsp: null, pr: null, dm: null,
+              R: 0, alc: 3, k: 4.5, vol: 0.7, fila: null, filaLen: 0, pre: null, pim: null, ultimo: null, resp: null,
+              wf: null, wfCtx: null, wfCol: null, quadros: 0, contagem: [], acum: 0,
+              banda: 0, teste: null, trava: null, mic: '' };
+const BANDAS = { 1: { f0: 17500, f1: 20500, nome: 'Discreta 17,5–20,5 kHz' }, 2: { f0: 14500, f1: 17500, nome: 'Forte 14,5–17,5 kHz' } };
+const WF_COLS = 360;
+const WORKLET = `class Coletor extends AudioWorkletProcessor { constructor(){ super(); this.b = new Float32Array(1024); this.n = 0; }
+  process(inp){ const c = inp[0] && inp[0][0]; if (c) { for (let i = 0; i < c.length; i++) { this.b[this.n++] = c[i]; if (this.n === 1024) { this.port.postMessage(this.b.slice(0)); this.n = 0; } } } return true; } }
+  registerProcessor('coletor', Coletor);`;
+
+function sonMontar() {        // (re)cria processador e ecograma para o alcance atual
+  const dr = SON.dsp ? SON.dsp.dr : SonarDSP.criar(48000).dr;
+  const fps = SON.dsp ? SON.dsp.fps : 48000 / 2048, lambda = SON.dsp ? SON.dsp.lambda : SonarDSP.C / 19000;
+  SON.R = Math.round(SON.alc / dr);
+  SON.pr = SonarDSP.criarProcessador(SON.R, dr, fps, lambda); SON.pr.k = SON.k;
+  SON.pre = new Float64Array(SON.R); SON.pim = new Float64Array(SON.R);
+  SON.wf = document.createElement('canvas'); SON.wf.width = WF_COLS; SON.wf.height = SON.R;
+  SON.wfCtx = SON.wf.getContext('2d'); SON.wfCtx.fillStyle = '#fbfaf4'; SON.wfCtx.fillRect(0, 0, WF_COLS, SON.R);
+  SON.wfCol = SON.wfCtx.createImageData(1, SON.R);
+  if (SON.demo) SON.dm = SonarDSP.criarDemo(SON.R, dr);
+  SON.ultimo = null; SON.resp = null;
+}
+
+function sonQuadro() {
+  const o = SonarDSP.processar(SON.pr, SON.pre, SON.pim); SON.ultimo = o; SON.quadros++;
+  SON.contagem.push(performance.now()); while (SON.contagem.length > 30) SON.contagem.shift();
+  const pr = SON.pr, d = SON.wfCol.data;
+  SON.wfCtx.drawImage(SON.wf, -1, 0);
+  for (let r = 0; r < SON.R; r++) {
+    let t;
+    if (o.calibrando || !pr.lim) t = 0.06;
+    else { const q = pr.razao[r]; t = q > 0 ? clamp(0.35 + 0.37 * Math.log2(q), 0, 1) : 0; }
+    const i = (t * 255) | 0, a = LUT[i * 4 + 3] / 255;
+    d[r * 4] = LUT[i * 4] * a + 251 * (1 - a); d[r * 4 + 1] = LUT[i * 4 + 1] * a + 250 * (1 - a); d[r * 4 + 2] = LUT[i * 4 + 2] * a + 244 * (1 - a); d[r * 4 + 3] = 255;
+  }
+  SON.wfCtx.putImageData(SON.wfCol, WF_COLS - 1, 0);
+  if (SON.quadros % Math.round(pr.fps) === 0 && !o.calibrando) SON.resp = SonarDSP.respiracao(pr);
+}
+
+function sonReceber(chunk) {
+  if (!SON.ativo) return;
+  const N = SON.dsp.N;
+  if (SON.filaLen + chunk.length > SON.fila.length) SON.filaLen = 0;   // segurança: descarta se acumulou demais
+  SON.fila.set(chunk, SON.filaLen); SON.filaLen += chunk.length;
+  while (SON.filaLen >= N) {
+    const ok = SonarDSP.perfil(SON.dsp, SON.fila.subarray(0, N), SON.R, SON.pre, SON.pim);
+    SON.fila.copyWithin(0, N, SON.filaLen); SON.filaLen -= N;
+    if (!ok) continue;
+    if (SON.teste) { sonPassoTeste(); if (!SON.ativo) return; continue; }
+    sonQuadro();
+  }
+}
+
+// Modo Auto: mede o eco direto nas duas faixas e escolhe a melhor para este aparelho
+function sonPassoTeste() {
+  const T = SON.teste; T.n++;
+  if (T.n > 10) { T.soma += SON.dsp.snr; T.k++; }
+  if (T.n < 34) return;
+  T.res[T.banda] = T.k ? T.soma / T.k : 0;
+  const outra = T.banda === 1 ? 2 : 1;
+  if (T.res[outra] === undefined && BANDAS[outra].f1 < SON.dsp.fs * 0.47) { sonAplicarBanda(outra); Object.assign(T, { banda: outra, n: 0, soma: 0, k: 0 }); return; }
+  // prefere a discreta (quase inaudível) se ela estiver no máximo 6 dB pior e for utilizável
+  const d = T.res[1] ?? -99, f = T.res[2] ?? -99;
+  const escolha = d >= 20 && d >= f - 6 ? 1 : f > d ? 2 : 1;
+  SON.teste = null; SON.bandaUsada = escolha;
+  if (escolha !== T.banda) sonAplicarBanda(escolha);
+  sonMontar();
+}
+function sonAplicarBanda(b) {
+  const ctx = SON.ctx; if (!ctx) return;
+  SON.dsp = SonarDSP.criar(ctx.sampleRate, BANDAS[b]); SON.bandaUsada = b;
+  SON.fila = new Float32Array(SON.dsp.N * 8); SON.filaLen = 0;
+  const buf = ctx.createBuffer(1, SON.dsp.N, ctx.sampleRate); buf.copyToChannel(SON.dsp.tx, 0);
+  const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(SON.gain);
+  try { SON.src && SON.src.stop(); } catch (e) {}
+  SON.src = src; src.start();
+}
+async function sonTravarTela() {
+  try { if ('wakeLock' in navigator && !SON.trava) { SON.trava = await navigator.wakeLock.request('screen'); SON.trava.addEventListener('release', () => { SON.trava = null; }); } } catch (e) {}
+}
+async function sonListarMics() {
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+    const sel = $('sonMic'), atual = SON.stream && SON.stream.getAudioTracks()[0] && SON.stream.getAudioTracks()[0].getSettings().deviceId;
+    sel.innerHTML = devs.map((d, i) => `<option value="${d.deviceId}">${(d.label || 'Microfone ' + (i + 1)).replace(/[<>&"]/g, '')}</option>`).join('');
+    if (atual) sel.value = atual;
+    $('linhaMic').classList.toggle('oculto-total', devs.length < 2);
+  } catch (e) {}
+}
+
+async function sonLigar(deviceId) {
+  const erro = $('sonErro'); erro.textContent = ''; $('sonDica').textContent = '';
+  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    erro.textContent = 'O microfone não está disponível nesta página. Aqui no chat ele é bloqueado: abra o app pelo endereço https dele no Safari. Enquanto isso, veja a demonstração.';
+    return;
+  }
+  sonParar();
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC({ latencyHint: 'interactive' });
+    ctx.resume().catch(() => {});                       // ainda dentro do toque: o iPhone exige isso para tocar som
+    const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
+    if (deviceId) audio.deviceId = { exact: deviceId };
+    const stream = await navigator.mediaDevices.getUserMedia({ audio });
+    await ctx.resume();
+    SON.ctx = ctx; SON.stream = stream; SON.demo = false; SON.mic = deviceId || '';
+    const inicial = SON.banda || 1;
+    SON.dsp = SonarDSP.criar(ctx.sampleRate, BANDAS[inicial]); SON.bandaUsada = inicial;
+    SON.teste = SON.banda === 0 ? { banda: 1, n: 0, soma: 0, k: 0, res: {} } : null;
+    SON.fila = new Float32Array(SON.dsp.N * 8); SON.filaLen = 0;
+    sonMontar();
+    const buf = ctx.createBuffer(1, SON.dsp.N, ctx.sampleRate); buf.copyToChannel(SON.dsp.tx, 0);
+    SON.src = ctx.createBufferSource(); SON.src.buffer = buf; SON.src.loop = true;
+    SON.gain = ctx.createGain(); SON.gain.gain.value = SON.vol;
+    SON.src.connect(SON.gain).connect(ctx.destination);
+    const mic = ctx.createMediaStreamSource(stream), mudo = ctx.createGain(); mudo.gain.value = 0; mudo.connect(ctx.destination);
+    try {
+      const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(url);
+      SON.no = new AudioWorkletNode(ctx, 'coletor'); SON.no.port.onmessage = e => sonReceber(e.data);
+    } catch (e) {
+      SON.no = ctx.createScriptProcessor(2048, 1, 1); SON.no.onaudioprocess = ev => sonReceber(ev.inputBuffer.getChannelData(0).slice(0));
+    }
+    mic.connect(SON.no); SON.no.connect(mudo);
+    SON.src.start();
+    SON.ativo = true;
+    ctx.onstatechange = () => { if (SON.ativo && ctx.state !== 'running' && ctx.state !== 'closed') $('sonDica').textContent = 'O sistema pausou o áudio (ligação, outro app ou tela bloqueada). Toque em Desligar e Ligar sonar de novo.'; else if (ctx.state === 'running') $('sonDica').textContent = ''; };
+    sonTravarTela(); sonListarMics();
+    $('btnSonar').textContent = 'Desligar sonar'; $('btnSonar').classList.add('ligado');
+    $('sonHudModo').textContent = 'SONAR · AO VIVO';
+  } catch (e) {
+    sonParar();
+    const noChat = window.self !== window.top || /claude\.ai|claudeusercontent/.test(location.hostname + document.referrer);
+    erro.textContent = e && e.name === 'NotAllowedError'
+      ? (noChat
+          ? 'Aqui dentro do chat do Claude o microfone é sempre bloqueado, mesmo com o Safari liberado: não é um problema do seu iPhone. Para o sonar de verdade, abra o app pelo endereço https dele (fora do chat). Enquanto isso, use a Demonstração.'
+          : 'O acesso ao microfone foi negado. No iPhone: Ajustes → Apps → Safari → Microfone → Permitir. Depois recarregue a página.')
+      : 'Não consegui ligar o sonar: ' + (e && e.message ? e.message : e);
+  }
+}
+function sonParar() {
+  SON.ativo = false;
+  try { SON.src && SON.src.stop(); } catch (e) {}
+  try { SON.stream && SON.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { SON.ctx && SON.ctx.close(); } catch (e) {}
+  try { SON.trava && SON.trava.release(); } catch (e) {}
+  Object.assign(SON, { ctx: null, stream: null, src: null, gain: null, no: null, teste: null, trava: null });
+  $('btnSonar').textContent = 'Ligar sonar'; $('btnSonar').classList.remove('ligado');
+}
+function sonDemo() {
+  sonParar(); $('sonErro').textContent = '';
+  if (SON.demo) { SON.demo = false; $('btnSonarDemo').textContent = 'Demonstração'; $('sonHudModo').textContent = 'SONAR'; SON.ultimo = null; return; }
+  SON.demo = true; SON.dsp = null; sonMontar(); SON.acum = 0;
+  $('btnSonarDemo').textContent = 'Parar demonstração'; $('sonHudModo').textContent = 'SONAR · DEMONSTRAÇÃO';
+}
+
+$('btnSonar').onclick = () => { if (SON.ativo) sonParar(); else { if (SON.demo) sonDemo(); sonLigar(); } };
+$('btnSonarDemo').onclick = () => sonDemo();
+$('btnSonarCalib').onclick = () => { if (SON.pr) SonarDSP.iniciarCalibracao(SON.pr); };
+segmentado('segAlc', v => { SON.alc = v; if (SON.ativo || SON.demo) sonMontar(); });
+segmentado('segSonSens', v => { SON.k = v; if (SON.pr) { SON.pr.k = v; SonarDSP.iniciarCalibracao(SON.pr); } });
+$('sonVol').addEventListener('input', e => { SON.vol = Number(e.target.value); $('sonVolOut').textContent = Math.round(SON.vol * 100) + '%'; if (SON.gain) SON.gain.gain.value = SON.vol; });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !SON.ativo) return;
+  if (SON.ctx && SON.ctx.state !== 'running') SON.ctx.resume().catch(() => {});
+  sonTravarTela();
+});
+segmentado('segBanda', v => { SON.banda = v; if (SON.ativo) sonLigar(SON.mic); });
+$('sonMic').addEventListener('change', e => sonLigar(e.target.value));
+try { navigator.mediaDevices && navigator.mediaDevices.addEventListener('devicechange', () => { if (SON.ativo) sonListarMics(); }); } catch (e) {}
+
+function desenharEco() {
+  const c = $('eco'); if (!c.parentElement.clientWidth) return;
+  const w0 = c.parentElement.clientWidth, alt = Math.round(clamp(w0 * 0.9, 280, window.innerWidth >= 980 ? 600 : 470));
+  const { g, w, h } = prepararCanvas(c, alt);
+  g.fillStyle = '#fbfaf4'; g.fillRect(0, 0, w, h);
+  const x0 = 44, x1 = w - 30, y0 = 56, y1 = h - 22;
+  if (SON.wf) { g.save(); g.imageSmoothingEnabled = true; g.drawImage(SON.wf, x0, y0, x1 - x0, y1 - y0); g.restore(); }
+  const passo = SON.alc <= 1.5 ? 0.25 : SON.alc <= 3 ? 0.5 : 1;
+  g.font = '600 10px ' + MONO; g.textAlign = 'right';
+  for (let m = 0; m <= SON.alc + 1e-6; m += passo) {
+    const y = y0 + m / SON.alc * (y1 - y0);
+    g.strokeStyle = 'rgba(117,131,108,0.16)'; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+    g.fillStyle = '#7a8870'; g.fillText(fmt(m, m % 1 ? (passo < 0.5 ? 2 : 1) : 0) + ' m', x0 - 6, y + 3);
+  }
+  g.textAlign = 'left'; g.fillStyle = '#98a38e'; g.fillText('agora', x1 - 30, h - 7); g.fillText('−15 s', x0, h - 7);
+  // ícone do iPhone no topo e marcador do alvo à direita
+  g.fillStyle = '#5f9e22'; g.fillRect(x1 + 9, y0 - 6, 10, 6);
+  const o = SON.ultimo;
+  if (o && o.alvo) {
+    const y = y0 + o.alvo.d / SON.alc * (y1 - y0);
+    g.fillStyle = '#d4573a'; g.beginPath(); g.moveTo(x1 + 4, y); g.lineTo(x1 + 14, y - 6); g.lineTo(x1 + 14, y + 6); g.closePath(); g.fill();
+  }
+}
+function desenharSonPerfil() {
+  const c = $('sonPerfil'); if (!c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c, 84); g.clearRect(0, 0, w, h);
+  const pr = SON.pr, o = SON.ultimo; if (!pr || !o || !pr.lim) return;
+  const topo = 6, X = r => r / (SON.R - 1) * w, Y = q => h - 4 - clamp(Math.log2(Math.max(q, 0.25)) + 2, 0, topo + 2) / (topo + 2) * (h - 8);
+  g.beginPath(); for (let r = 0; r < SON.R; r++) { const y = Y(pr.razao[r]); r ? g.lineTo(X(r), y) : g.moveTo(X(r), y); }
+  g.strokeStyle = o.alvo ? '#d4573a' : '#5f9e22'; g.lineWidth = 1.6; g.stroke();
+  const yl = Y(1); g.setLineDash([5, 4]); g.strokeStyle = 'rgba(38,51,31,.5)'; g.beginPath(); g.moveTo(0, yl); g.lineTo(w, yl); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#7a8870'; g.font = '10px ' + MONO;
+  g.textAlign = 'left'; g.fillText('0 m', 2, h - 6); g.textAlign = 'right'; g.fillText(fmt(SON.alc, SON.alc % 1 ? 1 : 0) + ' m', w - 2, h - 6); g.fillText('limiar', w - 2, yl - 4);
+}
+function desenharSonResp() {
+  const c = $('sonRespCv'); if (!c.clientWidth) return;
+  const { g, w, h } = prepararCanvas(c, 84); g.clearRect(0, 0, w, h);
+  const r = SON.resp; if (!r || !r.serie || r.serie.length < 2) return;
+  const v = r.serie, mx = Math.max(2, ...v.map(Math.abs)), X = i => i / (v.length - 1) * w, Y = x => h / 2 - x / mx * (h / 2 - 8);
+  g.strokeStyle = '#e1e5d5'; g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
+  g.beginPath(); v.forEach((x, i) => i ? g.lineTo(X(i), Y(x)) : g.moveTo(X(i), Y(x)));
+  g.strokeStyle = r.conf > 0.45 && r.parado ? '#5f9e22' : '#98a38e'; g.lineWidth = 2; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = '#7a8870'; g.font = '10px ' + MONO; g.fillText('±' + fmt(mx, 1) + ' mm', 4, 12);
+}
+function painelSonar() {
+  const o = SON.ultimo, ligado = SON.ativo || SON.demo, pill = $('pill');
+  const sobre = $('sonSobre');
+  if (!ligado) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Sonar desligado'; $('sonSobreSub').textContent = 'toque em Ligar sonar ou veja a demonstração'; }
+  else if (SON.teste) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Ajustando o som…'; $('sonSobreSub').textContent = 'testando a melhor faixa para este aparelho'; }
+  else if (!o || o.calibrando) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Calibrando…'; $('sonSobreSub').textContent = 'fique parado por 3 segundos'; }
+  else sobre.classList.add('oculto');
+  const cal = SON.teste || !o || o.calibrando;
+  pill.textContent = !ligado ? 'Desligado' : cal ? 'Calibrando' : o.alvo ? 'Movimento' : 'Parado';
+  pill.className = 'pill ' + (!ligado ? '' : cal ? 'calibrando' : o.alvo ? 'movimento' : 'parado');
+  $('fonte').textContent = SON.demo ? 'sonar · demonstração (simulado)' : SON.ativo ? 'sonar · microfone e alto-falante' : 'sonar acústico';
+  $('sonAlvo').innerHTML = o && o.alvo ? `${fmt(o.alvo.d, 2)} <small>m</small>` : '—';
+  $('sonHudAlvo').textContent = o && o.alvo ? `MOVIMENTO A ${fmt(o.alvo.d, 2)} M` : ligado && o && !o.calibrando ? 'SEM MOVIMENTO' : '';
+  $('sonPerfilTxt').textContent = o && o.alvo ? `pico a ${fmt(o.alvo.d, 2)} m` : '—';
+  const r = SON.resp, ok = r && r.conf > 0.45 && r.parado && r.bpm >= 6 && r.bpm <= 40;
+  $('sonResp').innerHTML = ok ? `${Math.round(r.bpm)} <small>/min</small>` : '—';
+  $('sonRespTxt').textContent = ok ? `${Math.round(r.bpm)}/min · a ${fmt(r.d, 2)} m` : r && !r.parado ? 'aguardando ficar parado' : ligado ? 'medindo…' : '—';
+  const cs = SON.contagem, taxa = cs.length > 2 ? (cs.length - 1) / ((cs[cs.length - 1] - cs[0]) / 1000) : 0;
+  const banda = SON.demo ? 'demonstração' : SON.ativo && SON.bandaUsada ? BANDAS[SON.bandaUsada].nome : '';
+  $('sonHudInfo').textContent = ligado ? `${taxa ? Math.round(taxa) + ' MED/S · ' : ''}${banda.toUpperCase()}` : '';
+  if (SON.demo) { $('sonQual').innerHTML = 'Ótima <small>sim.</small>'; $('sonDica').textContent = ''; }
+  else if (SON.ativo && SON.dsp && SON.dsp.snr) {
+    const q = SON.dsp.snr, nome = q >= 30 ? 'Ótima' : q >= 22 ? 'Boa' : q >= 15 ? 'Fraca' : 'Ruim';
+    $('sonQual').innerHTML = `${nome} <small>${Math.round(q)} dB</small>`;
+    const dica = $('sonDica');
+    if (SON.teste) dica.textContent = 'Testando qual faixa de som funciona melhor neste aparelho…';
+    else if (SON.dsp.clip > 3) dica.textContent = 'O microfone está saturando: baixe o volume.';
+    else if (q < 18) dica.textContent = 'Eco fraco: aumente o volume, desconecte fones Bluetooth e não cubra o alto-falante nem o microfone. Se não melhorar, tente a faixa Forte.';
+    else if (!/pausou/.test(dica.textContent)) dica.textContent = '';
+  } else { $('sonQual').textContent = '—'; if (!SON.ativo) $('sonDica').textContent = ''; }
+}
+
+// ================= ABAS E LAÇO PRINCIPAL =================
+const ABA_HASH = { lab: 'laboratorio', sonar: 'sonar', grav: 'iphone', vivo: 'mac' };
+const abaDoHash = () => Object.keys(ABA_HASH).find(k => ABA_HASH[k] === location.hash.slice(1));
+let aba = abaDoHash() || (servidoPeloSensor ? 'vivo' : 'lab');
+function trocarAba(nova) {
+  aba = nova;
+  for (const [k, id] of [['lab', 'abaLab'], ['sonar', 'abaSonar'], ['grav', 'abaGrav'], ['vivo', 'abaVivo']]) $(id).setAttribute('aria-selected', String(k === aba));
+  try { if (location.hash.slice(1) !== ABA_HASH[aba]) history.replaceState(null, '', '#' + ABA_HASH[aba]); } catch (e) {}
+  ultimoPainel = 0;
+  $('abaLab').classList.toggle('ativa', aba === 'lab'); $('abaVivo').classList.toggle('ativa', aba === 'vivo'); $('abaGrav').classList.toggle('ativa', aba === 'grav'); $('abaSonar').classList.toggle('ativa', aba === 'sonar');
+  $('telaLab').classList.toggle('oculto-total', aba !== 'lab'); $('telaVivo').classList.toggle('oculto-total', aba !== 'vivo'); $('telaGrav').classList.toggle('oculto-total', aba !== 'grav'); $('telaSonar').classList.toggle('oculto-total', aba !== 'sonar');
+  $('vivoAviso').classList.toggle('oculto-total', servidoPeloSensor);
+  $('vivoConteudo').classList.toggle('oculto-total', !servidoPeloSensor);
+  if (aba === 'lab') { vistaLab.ajustar(LAB.sala); atualizarPainelLab(); }
+  else if (aba === 'grav') { painelGrav(); desenharGravGraficos(); }
+  else if (aba === 'sonar') { painelSonar(); }
+  else { $('pill').textContent = servidoPeloSensor ? '—' : 'Offline'; $('pill').className = 'pill'; $('fonte').textContent = servidoPeloSensor ? 'conectando ao sensor…' : 'abra pelo endereço do sensor'; if (VIVO.rti) vistaVivo.ajustar(VIVO.rti.sala); aplicarVivo(); }
+}
+$('abaLab').onclick = () => trocarAba('lab');
+$('abaVivo').onclick = () => trocarAba('vivo');
+$('abaGrav').onclick = () => trocarAba('grav');
+$('abaSonar').onclick = () => trocarAba('sonar');
+window.addEventListener('hashchange', () => { const a = abaDoHash(); if (a && a !== aba) trocarAba(a); });
+
+if (servidoPeloSensor) { const m = document.createElement('link'); m.rel = 'manifest'; m.href = '/manifest.json'; document.head.appendChild(m); }
+
+let ultimo = performance.now(), acumulado = 0, ultimoPainel = 0;
+function quadro(t) {
+  const dt = Math.min(t - ultimo, 250); ultimo = t;
+  if (document.hidden) { requestAnimationFrame(quadro); return; }
+  if (aba === 'lab' && LAB.sala) {
+    acumulado += dt; let n = 0;
+    while (acumulado >= 50 && n < 5) { passoLab(t); acumulado -= 50; n++; }   // 20 medições por segundo
+    if (n === 5) acumulado = 0;
+    vistaLab.desenhar({ mapa: LAB.mapa, limiar: LAB.limiar, ylinks: LAB.calib ? null : LAB.ys, sigma: LAB.sigEst,
+                        reais: LAB.pessoas, trilhas: LAB.trilhas, opc: LAB.opc, t, calibrando: LAB.calib !== null });
+    if (t - ultimoPainel > 120) { atualizarPainelLab(); desenharBarras(); ultimoPainel = t; }
+  }
+  if (SON.demo && SON.pr) {                       // demonstração roda no mesmo ritmo do sonar real (~23 medições/s)
+    SON.acum += dt / 1000 * SON.pr.fps; let k = 0;
+    while (SON.acum >= 1 && k < 6) { SonarDSP.passoDemo(SON.dm, SON.pre, SON.pim); sonQuadro(); SON.acum -= 1; k++; }
+    if (k === 6) SON.acum = 0;
+  }
+  if (aba === 'sonar') {
+    desenharEco();
+    if (t - ultimoPainel > 120) { painelSonar(); desenharSonPerfil(); desenharSonResp(); ultimoPainel = t; }
+  } else if (aba === 'grav') {
+    const n = GRAV.v.length;
+    if (n && GRAV.tocando && !GRAV.arrastando) {
+      GRAV.pos += dt / 1000 * GRAV.vel;
+      if (GRAV.pos >= n - 1) { GRAV.pos = n - 1; GRAV.tocando = false; $('btnPlay').textContent = '▶'; }
+      $('scrub').value = String(GRAV.pos);
+    }
+    const i = Math.min(Math.floor(GRAV.pos), Math.max(n - 1, 0));
+    desenharCampoEm(t, $('campoGrav'), GRAV, n ? (i < 15 ? Math.min(GRAV.ag[i] / 3, 0.5) : relGrav(GRAV.ag[i])) : 0, $('hudGravVal'));
+    if (t - ultimoPainel > 120) { painelGrav(); desenharGravGraficos(); ultimoPainel = t; }
+  } else if (aba === 'vivo' && servidoPeloSensor) {
+    if (VIVO.rti) vistaVivo.desenhar({ mapa: VIVO.rti.mapa, limiar: 4.5, ylinks: VIVO.rti.calib ? null : VIVO.rti.y, sigma: VIVO.rti.sig,
+                                       reais: null, trilhas: VIVO.rti.trilhas, opc: { calor: true, links: true, real: false, rastro: true }, t, calibrando: !!VIVO.rti.calib });
+    else { desenharCampo(t); if (t - ultimoPainel > 120) { desenharOnda(); desenharFaixa(); ultimoPainel = t; } }
+  }
+  requestAnimationFrame(quadro);
+}
+
+let redimensionar = 0;
+window.addEventListener('resize', () => { clearTimeout(redimensionar); redimensionar = setTimeout(() => { if (LAB.sala) vistaLab.ajustar(LAB.sala); if (VIVO.rti) vistaVivo.ajustar(VIVO.rti.sala); }, 150); });
+
+montarLab();
+trocarAba(aba);
+requestAnimationFrame(quadro);
+cicloVivo();
+</script>
+</body>
+</html>
