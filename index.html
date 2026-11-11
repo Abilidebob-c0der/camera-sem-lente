@@ -124,7 +124,50 @@
   .botao.primario.ligado { background: #fbe6de; color: #a3361f; border-color: color-mix(in srgb, var(--mov) 50%, var(--borda)); }
   #eco { display: block; width: 100%; }
   .aviso-txt { font-size: 13px; color: #92620e; margin-top: 6px; } .aviso-txt:empty { display: none; }
-  @media (prefers-reduced-motion: reduce) { .mascote.espia svg, .rec { animation: none !important; } }
+  /* balão de reação do detetive */
+  .reacao { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 30;
+            display: flex; align-items: center; gap: 10px; max-width: min(360px, calc(100vw - 28px)); padding: 8px 14px 8px 8px;
+            background: #ffffff; border: 1px solid var(--borda); border-radius: 20px; box-shadow: 0 8px 28px rgba(60,72,40,.18);
+            transform: translateY(16px) scale(.96); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,1.4,.4,1), opacity .25s; }
+  .reacao.on { transform: none; opacity: 1; pointer-events: auto; cursor: pointer; }
+  .reacao .mascote { width: 64px; height: 56px; filter: none; }
+  .reacao p { font: 600 14px/1.35 var(--titulo); color: var(--texto); }
+/* animações do detetive */
+@keyframes det-onda { 0% { opacity: 0; transform: translateX(-4px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateX(4px); } }
+.det-ondas path, .det-wifi path { animation: det-onda 1.4s ease-out infinite; transform-box: fill-box; }
+@keyframes det-wifi { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.det-wifi path { animation-name: det-wifi; }
+@keyframes det-pula { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-7px); } 55% { transform: translateY(0); } 70% { transform: translateY(-3px); } }
+.det-pula { animation: det-pula 1.1s ease-in-out infinite; }
+@keyframes det-exclama { 0%, 100% { transform: scale(1) rotate(0); } 25% { transform: scale(1.18) rotate(-8deg); } 50% { transform: scale(1) rotate(6deg); } }
+.det-exclama { animation: det-exclama .9s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes det-tracos { 0%, 100% { opacity: .2; transform: translateX(3px); } 50% { opacity: 1; transform: translateX(0); } }
+.det-tracos { animation: det-tracos .7s ease-in-out infinite; }
+@keyframes det-ampulheta { 0%, 45% { transform: translate(92px, 52px) rotate(0); } 55%, 100% { transform: translate(92px, 52px) rotate(180deg); } }
+.det-ampulheta { animation: det-ampulheta 2.4s ease-in-out infinite; }
+@keyframes det-shh { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.det-shh { animation: det-shh 1.6s ease-in-out infinite; }
+@keyframes det-coracao { 0%, 100% { transform: translate(96px, 30px) scale(1); } 15% { transform: translate(96px, 30px) scale(1.3); } 30% { transform: translate(96px, 30px) scale(1); } 45% { transform: translate(96px, 30px) scale(1.2); } }
+.det-coracao { animation: det-coracao 1.2s ease-in-out infinite; }
+@keyframes det-ecg { 0% { stroke-dashoffset: 40; } 100% { stroke-dashoffset: 0; } }
+.det-ecg { stroke-dasharray: 40; animation: det-ecg 1.2s linear infinite; }
+@keyframes det-fita { 0%, 100% { transform: scaleX(.15); } 50%, 80% { transform: scaleX(1); } }
+.det-fita { animation: det-fita 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 50%; }
+@keyframes det-feixe { 0% { transform: rotate(-35deg); } 50% { transform: rotate(125deg); } 100% { transform: rotate(-35deg); } }
+.det-feixe { animation: det-feixe 4s ease-in-out infinite; }
+@keyframes det-lupa { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(8px, -4px); } }
+.det-lupa { animation: det-lupa 2.2s ease-in-out infinite; }
+@keyframes det-play { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.det-play { animation: det-play 1s ease-in-out infinite; }
+@keyframes det-zzz { 0% { opacity: 0; transform: translate(0, 4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -8px); } }
+.det-zzz text { animation: det-zzz 2.4s ease-out infinite; }
+@keyframes det-brilho { 0%, 100% { opacity: .2; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.15); } }
+.det-brilho path { animation: det-brilho 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes det-interroga { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(14deg); } }
+.det-interroga { animation: det-interroga 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 90%; }
+@media (prefers-reduced-motion: reduce) { [class^="det-"], [class*=" det-"], .det-ondas path, .det-wifi path, .det-zzz text, .det-brilho path { animation: none !important; } }
+
+  @media (prefers-reduced-motion: reduce) { .mascote.espia svg, .rec { animation: none !important; } .reacao { transition: opacity .2s; } }
   button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--calmo); outline-offset: 2px; }
   @media (min-width: 980px) {
     body { max-width: 1200px; padding-left: 24px; padding-right: 24px; }
@@ -191,7 +234,7 @@
     <div class="hud tr" id="hudPos">—</div>
     <div class="hud bl" id="hudRede">—</div>
     <div class="hud br" id="hudErro">—</div>
-    <div class="sobre" id="labCalib"><p>Calibrando a sala vazia…<small>medindo o ruído de cada link</small></p></div>
+    <div class="sobre" id="labCalib"><span class="mascote" data-pose="calibrando"></span><p>Calibrando a sala vazia…<small>medindo o ruído de cada link</small></p></div>
   </section>
   <p class="dica">Toque e arraste no mapa para mover uma pessoa. Solte e ela fica parada ali.</p>
  </div>
@@ -247,35 +290,7 @@
     <div class="hud tl"><span class="rec"></span><span id="sonHudModo">SONAR</span></div>
     <div class="hud tr" id="sonHudAlvo">—</div>
     <div class="hud" id="sonHudInfo" style="top:28px;left:14px;font-size:9.5px;opacity:.85"></div>
-    <div class="sobre" id="sonSobre"><span class="mascote" aria-hidden="true"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
-  <g>
-    <!-- rosto -->
-    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
-    <!-- chapéu de explorador -->
-    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
-    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
-    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
-    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
-    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
-    <!-- mãos -->
-    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
-    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
-    <!-- binóculo -->
-    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-  </g>
-  <!-- moita -->
-  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
-  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
-  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
-</svg></span><p id="sonSobreTit">Sonar desligado<small id="sonSobreSub">toque em Ligar sonar ou veja a demonstração</small></p></div>
+    <div class="sobre" id="sonSobre"><span class="mascote" data-pose="dormindo" id="sonArte"></span><p id="sonSobreTit">Sonar desligado<small id="sonSobreSub">toque em Ligar sonar ou veja a demonstração</small></p></div>
   </section>
   <div class="dois" style="margin-top:10px">
     <button class="botao primario" id="btnSonar">Ligar sonar</button>
@@ -318,6 +333,8 @@
   <div class="so-formas oculto-total">
     <section class="cartao controles">
       <div class="dois"><button class="botao primario" id="btnVarrer">Iniciar varredura</button><button class="botao" id="btnLimparVarr">Limpar</button></div>
+      <div class="linha">Nitidez angular <div class="seg" id="segNitidez"><button data-v="1" class="ativa">Ligada</button><button data-v="0">Desligada</button></div></div>
+      <div class="linha">Largura do feixe <div class="seg" id="segFeixe"><button data-v="12">Estreito</button><button data-v="17" class="ativa">Médio</button><button data-v="25">Largo</button></div></div>
       <p class="dica" style="text-align:left;margin:0" id="fComo">Segure o iPhone deitado (tela para cima), com a parte de baixo apontando para a frente, e gire devagar de um lado para o outro, como um farol, por uns 20 segundos.</p>
       <p class="dica-son" id="fAviso"></p>
     </section>
@@ -327,14 +344,15 @@
     </section>
     <section class="cartao"><div class="texto" style="margin:0">
       <p><b>Como ler:</b> o leque é o que fica à sua frente, visto de cima, com o iPhone na ponta de baixo. Cores fortes são ecos fortes. Uma linha reta e comprida é uma superfície plana (parede, porta, armário); uma mancha pequena é um objeto.</p>
-      <p><b>Limite honesto:</b> o alto-falante do iPhone espalha o som num cone largo, então o desenho sai borrado, como num radar de barco. Distâncias são boas; larguras e ângulos são aproximados.</p>
+      <p><b>Nitidez angular:</b> o alto-falante espalha o som num cone largo, o que borra cada objeto por várias dezenas de graus. Com a nitidez ligada, o app desfaz esse borrão matematicamente (deconvolução de Richardson–Lucy, a mesma ideia usada em telescópios). Nos testes, dois objetos a 30° um do outro passam a aparecer separados. "Largura do feixe" diz ao algoritmo o tamanho desse borrão: se os objetos saírem duplicados, escolha um feixe mais estreito; se continuarem borrados, um mais largo.</p>
+      <p><b>Limite honesto:</b> distâncias são boas; larguras e ângulos são aproximados, e objetos a menos de ~25° um do outro ainda se misturam.</p>
     </div></section>
   </div>
   <!-- ===== comuns ===== -->
   <section class="cartao controles">
     <div class="linha">Alcance <div class="seg" id="segAlc"><button data-v="1.5">1,5 m</button><button data-v="3" class="ativa">3 m</button><button data-v="5">5 m</button></div></div>
     <div class="linha">Sensibilidade <div class="seg" id="segSonSens"><button data-v="6">Baixa</button><button data-v="4.5" class="ativa">Média</button><button data-v="3.2">Alta</button></div></div>
-    <div class="linha">Faixa de som <div class="seg" id="segBanda"><button data-v="0" class="ativa">Auto</button><button data-v="1">Discreta</button><button data-v="2">Forte</button></div></div>
+    <div class="linha">Faixa de som <div class="seg" id="segBanda"><button data-v="0" class="ativa">Auto</button><button data-v="1">Discreta</button><button data-v="2">Forte</button><button data-v="3">Precisa</button></div></div>
     <div class="linha oculto-total" id="linhaMic">Microfone <select id="sonMic" aria-label="Microfone"></select></div>
     <div class="linha">Volume <input type="range" id="sonVol" min="0.1" max="1" step="0.05" value="0.7"><output id="sonVolOut">70%</output></div>
     <button class="botao" id="btnSonarCalib">Recalibrar (fique parado 3 s)</button>
@@ -346,7 +364,7 @@
       <p><b>Distância:</b> mede o que está parado à frente (paredes, móveis) como uma trena, e também quem se move e a que velocidade. Para mais precisão, use o ajuste com uma distância medida com fita.</p>
       <p><b>Formas:</b> gire o iPhone devagar; ele usa o giroscópio para saber para onde está apontando e monta um mapa visto de cima.</p>
       <p><b>Respiração:</b> sente-se parado de frente para o iPhone, a 0,5–1 m, por uns 15 segundos (visão Ecograma).</p>
-      <p><b>Chiado agudo:</b> na faixa <b>Discreta</b> o som fica entre 17,5 e 20,5 kHz, que muita gente não ouve. A <b>Forte</b> (14,5 a 17,5 kHz) alcança mais, mas é audível. No modo <b>Auto</b> o app testa as duas e escolhe.</p>
+      <p><b>Chiado agudo:</b> na faixa <b>Discreta</b> o som fica entre 17,5 e 20,5 kHz, que muita gente não ouve. A <b>Forte</b> (14,5 a 17,5 kHz) alcança mais, mas é audível. A <b>Precisa</b> (14 a 20,5 kHz) usa o dobro da largura de banda: o pulso fica com metade do tamanho, separando objetos que estão a poucos centímetros um do outro, e o eco fica mais forte. É a melhor para medir, mas o chiado é bem audível. No modo <b>Auto</b> o app testa Discreta e Forte e escolhe.</p>
       <p><b>No Mac:</b> funciona no Safari ou no Chrome; escolha o microfone se tiver mais de um. A visão Formas precisa de giroscópio, então funciona só no iPhone.</p>
       <p><b>Onde funciona:</b> aqui no chat o microfone é bloqueado; use o endereço do seu site (github.io) para o sonar de verdade.</p>
     </div>
@@ -363,35 +381,7 @@
     <div class="hud tr" id="hudGravVal">0%</div>
     <div class="hud bl" id="hudGravRssi">— dBm</div>
     <div class="hud br" id="hudGravTempo">00:00</div>
-    <div class="sobre" id="gravVazio"><span class="mascote" aria-hidden="true"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
-  <g>
-    <!-- rosto -->
-    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
-    <!-- chapéu de explorador -->
-    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
-    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
-    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
-    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
-    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
-    <!-- mãos -->
-    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
-    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
-    <!-- binóculo -->
-    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-  </g>
-  <!-- moita -->
-  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
-  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
-  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
-</svg></span><p>Nenhuma gravação ainda<small>grave com o atalho no iPhone e cole a gravação aqui</small></p></div>
+    <div class="sobre" id="gravVazio"><span class="mascote" data-pose="filme"></span><p>Nenhuma gravação ainda<small>grave com o atalho no iPhone e cole a gravação aqui</small></p></div>
   </section>
   <div class="player">
     <button class="botao play" id="btnPlay" aria-label="Reproduzir">▶</button>
@@ -432,35 +422,7 @@
 <!-- ================= AO VIVO ================= -->
 <main id="telaVivo" class="oculto-total">
   <section class="cartao aviso" id="vivoAviso">
-    <span class="mascote" aria-hidden="true" style="width:74px;height:64px;margin-bottom:6px"><svg viewBox="0 0 120 104" role="img" aria-label="Observador de binóculo atrás de uma moita">
-  <g>
-    <!-- rosto -->
-    <ellipse cx="60" cy="52" rx="22" ry="21" fill="#f0c49a"/>
-    <!-- chapéu de explorador -->
-    <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
-    <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
-    <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
-    <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/>
-    <path d="M71 12 C76 10 80 8 85 7" stroke="#5c8f27" stroke-width="1" fill="none"/>
-    <!-- mãos -->
-    <circle cx="35" cy="56" r="6.5" fill="#f0c49a"/>
-    <circle cx="85" cy="56" r="6.5" fill="#f0c49a"/>
-    <!-- binóculo -->
-    <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="74" cy="50" r="12" fill="#2f3539"/>
-    <circle cx="46" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
-    <circle cx="43" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="71" cy="47" r="2.6" fill="#ffffff"/>
-    <circle cx="49" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-    <circle cx="77" cy="53" r="1.1" fill="#ffffff" opacity=".8"/>
-  </g>
-  <!-- moita -->
-  <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 104 Z" fill="#78b13a"/>
-  <path d="M28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 Z" fill="#3f7a27"/>
-  <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
-</svg></span>
+    <span class="mascote" data-pose="notebook" style="width:84px;height:73px;margin-bottom:6px"></span>
     <h2>Abra pelo endereço do sensor</h2>
     <p>Aqui no chat, o navegador bloqueia o acesso à sua rede Wi-Fi, então o modo ao vivo só funciona quando o app é aberto pelo próprio sensor. Por enquanto o sensor é o seu Mac.</p>
     <ol>
@@ -490,7 +452,7 @@
       <canvas id="salaVivo"></canvas>
       <div class="hud tl"><span class="rec"></span>RTI · AO VIVO</div>
       <div class="hud tr" id="hudPosVivo">—</div>
-      <div class="sobre" id="vivoCalibSala"><p>Calibrando a sala vazia…<small>saia da sala por 6 segundos</small></p></div>
+      <div class="sobre" id="vivoCalibSala"><span class="mascote" data-pose="calibrando"></span><p>Calibrando a sala vazia…<small>saia da sala por 6 segundos</small></p></div>
     </section>
     <p class="dica" id="vivoDica">O visor mostra o quanto o sinal está sendo perturbado, não a posição. Para posição, são precisos 4+ sensores.</p>
    </div>
@@ -520,6 +482,8 @@
    </div>
   </section>
 </main>
+
+<div class="reacao" id="reacao" role="status" aria-live="polite"><span class="mascote" id="reacaoArte"></span><p id="reacaoTxt"></p></div>
 
 <footer class="rodape">
   <svg viewBox="0 0 600 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34 C20 20 40 16 60 22 C80 8 110 8 125 20 C145 6 175 10 185 22 C205 12 230 12 245 24 C265 8 300 6 315 20 C335 10 360 12 372 24 C392 10 420 8 438 21 C455 12 480 12 492 24 C510 10 540 10 556 22 C572 14 590 18 600 26 L600 34 Z" fill="#2c5a1e"/><path d="M0 34 C30 26 50 24 75 28 C100 18 130 20 150 29 C175 20 205 21 222 30 C250 20 280 21 300 29 C325 19 355 21 372 30 C398 21 425 22 445 29 C470 20 500 22 520 30 C545 22 575 23 600 30 L600 34 Z" fill="#3f7a27"/></svg>
@@ -723,7 +687,7 @@ const SonarDSP = (() => {
   }
 
   // Sinal transmitido + espectro de referência
-  function criar(fs, { f0 = 17500, f1 = 20500, dur = 0.010 } = {}) {
+  function criar(fs, { f0 = 17500, f1 = 20500, dur = 0.020 } = {}) {
     const N = 2048, Lc = Math.round(dur * fs), tx = new Float32Array(N);
     for (let n = 0; n < Lc; n++) {
       const t = n / fs, w = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (Lc - 1));
@@ -863,7 +827,7 @@ const SonarDSP = (() => {
     return pr.est;
   }
   // Picos de um perfil, com posição refinada por interpolação parabólica (precisão abaixo de 1 cm)
-  function picos(v, r0, r1, dr, lim, max = 6) {
+  function picos(v, r0, r1, dr, lim, max = 6, sepMin = 0.07) {
     const achados = [];
     for (let r = Math.max(r0, 1); r < Math.min(r1, v.length - 1); r++) {
       if (v[r] > lim && v[r] >= v[r - 1] && v[r] > v[r + 1]) {
@@ -874,7 +838,7 @@ const SonarDSP = (() => {
     }
     achados.sort((x, y) => y.amp - x.amp);
     const fin = [];
-    for (const p of achados) if (!fin.some(q => Math.abs(q.d - p.d) < 0.07)) fin.push(p);
+    for (const p of achados) if (!fin.some(q => Math.abs(q.d - p.d) < sepMin)) fin.push(p);
     return fin.slice(0, max).sort((x, y) => x.d - y.d);
   }
   function mediana(v, r0) {
@@ -885,7 +849,8 @@ const SonarDSP = (() => {
     const v = pr.est; if (!v) return null;
     if (zonaMorta == null) zonaMorta = pr.zona || 0.18;
     const r0 = Math.ceil(zonaMorta / pr.dr), piso = mediana(v, r0);
-    const ps = picos(v, r0, pr.R, pr.dr, piso * 4);
+    const sepMin = Math.max(0.035, (pr.meia || 0.075) * 0.95);
+    const ps = picos(v, r0, pr.R, pr.dr, piso * 4, 6, sepMin);
     if (!ps.length) return { pontos: [], perto: null, piso };
     const maxA = Math.max(...ps.map(p => p.amp)), B = pr.estB, meia = pr.meia || 0.04;
     const pontos = ps.map(p => {
@@ -899,10 +864,43 @@ const SonarDSP = (() => {
     pontos.sort((x, y) => x.d - y.d);                 // ecos colados: fica a borda mais próxima, com a força do maior
     const unicos = [];
     for (const p of pontos) {
-      const q = unicos.find(u => Math.abs(u.d - p.d) < 0.07);
+      const q = unicos.find(u => Math.abs(u.d - p.d) < sepMin);
       if (q) { if (p.amp > q.amp) { q.amp = p.amp; q.rel = p.rel; q.db = p.db; } } else unicos.push({ ...p });
     }
     return { pontos: unicos, perto: unicos.find(p => p.db >= 14) || null, piso, zona: zonaMorta };
+  }
+
+  // ---- Nitidez angular: Richardson–Lucy em cada anel de distância ----
+  // grid[a*R + r]: eco medido na direção a; o feixe largo borra cada objeto por vários graus.
+  // Conhecendo a largura do feixe (sigma, em bins de ângulo), o algoritmo estima a cena "sem borrão".
+  function deconvAngular(grid, cont, nA, R, sigma, iters = 70, r0 = 0, minSinal = 0) {
+    const K = Math.max(1, Math.ceil(sigma * 3)), ker = new Float64Array(2 * K + 1);
+    let soma = 0; for (let k = -K; k <= K; k++) { ker[k + K] = Math.exp(-(k * k) / (2 * sigma * sigma)); soma += ker[k + K]; }
+    for (let k = 0; k < ker.length; k++) ker[k] /= soma;
+    const conv = (x, y, msk) => { for (let a = 0; a < nA; a++) { let t = 0; for (let k = -K; k <= K; k++) { const b = a + k; if (b >= 0 && b < nA && (!msk || msk[b])) t += x[b] * ker[k + K]; } y[a] = t; } };
+    const out = new Float32Array(grid.length), d = new Float64Array(nA), u = new Float64Array(nA), est = new Float64Array(nA),
+          rat = new Float64Array(nA), cor = new Float64Array(nA), norm = new Float64Array(nA), msk = new Uint8Array(nA), um = new Float64Array(nA).fill(1);
+    let n = 0; for (let a = 0; a < nA; a++) { msk[a] = cont[a] ? 1 : 0; n += msk[a]; }
+    if (!n) return out;
+    conv(um, norm, msk);                                  // quanto de cada direção foi de fato observado
+    for (let r = r0; r < R; r++) {
+      // tira o piso (20% mais baixos) do anel: o algoritmo trabalha só com o que é eco de verdade
+      const vals = []; for (let a = 0; a < nA; a++) if (msk[a]) vals.push(grid[a * R + r]);
+      vals.sort((x, y) => x - y);
+      const piso = vals[Math.floor(vals.length * 0.2)], topo = vals[vals.length - 1];
+      if (topo - piso <= minSinal) { for (let a = 0; a < nA; a++) out[a * R + r] = msk[a] ? grid[a * R + r] - piso : 0; continue; }
+      let md = 0; for (let a = 0; a < nA; a++) { d[a] = msk[a] ? Math.max(grid[a * R + r] - piso, 0) + 1e-3 : 0; md += d[a]; }
+      md /= n;
+      for (let a = 0; a < nA; a++) u[a] = md;
+      for (let it = 0; it < iters; it++) {
+        conv(u, est, null);
+        for (let a = 0; a < nA; a++) rat[a] = msk[a] ? d[a] / Math.max(est[a], 1e-9) : 0;
+        conv(rat, cor, null);
+        for (let a = 0; a < nA; a++) u[a] *= norm[a] > 1e-6 ? cor[a] / norm[a] : 1;
+      }
+      for (let a = 0; a < nA; a++) out[a * R + r] = u[a];
+    }
+    return out;
   }
 
   // Respiração: procura a faixa de distância que oscila devagar e mede o período
@@ -952,6 +950,7 @@ const SonarDSP = (() => {
     for (let x = -3; x <= 3.001; x += 0.05) cena.push({ x, y: 2.2, a: 0.004, ph: fase() });                    // parede a 2,2 m
     for (let x = 0.30; x <= 0.62; x += 0.04) cena.push({ x, y: 0.95, a: 0.007, ph: fase() });                  // caixa de ~30 cm
     for (let k = 0; k < 12; k++) { const t = k / 12 * 6.283; cena.push({ x: -0.8 + 0.09 * Math.cos(t), y: 1.45 + 0.09 * Math.sin(t), a: 0.005, ph: fase() }); } // coluna
+    for (let k = 0; k < 8; k++) { const t = k / 8 * 6.283; cena.push({ x: 0.0 + 0.06 * Math.cos(t), y: 1.02 + 0.06 * Math.sin(t), a: 0.006, ph: fase() }); }   // vaso em frente, ao lado da caixa
     return { t: 0, R, dr, fps: 48000 / 2048, lambda: C / 19000, cena };
   }
   function somaEco(dm, pre, pim, d, amp, ph) {
@@ -979,10 +978,125 @@ const SonarDSP = (() => {
     for (let r = 0; r < dm.R; r++) { pre[r] += (Math.random() - 0.5) * 0.0012; pim[r] += (Math.random() - 0.5) * 0.0012; }
   }
 
-  return { fft, criar, perfil, criarProcessador, processar, iniciarCalibracao, respiracao, criarDemo, passoDemo, estatico, picos, trena, mediana, ganho, C };
+  return { fft, criar, perfil, criarProcessador, processar, iniciarCalibracao, respiracao, criarDemo, passoDemo, estatico, picos, trena, mediana, ganho, deconvAngular, C };
 })();
 
 
+
+</script>
+<script>
+// ===== Detetive: poses animadas (desenho original, SVG + CSS) =====
+const Detetive = (() => {
+  const PELE = '#f0c49a', TINTA = '#3a2c22';
+  const rosto = (cy = 52) => `<ellipse cx="60" cy="${cy}" rx="22" ry="21" fill="${PELE}"/>`;
+  const chapeu = (dy = 0, cls = '') => `<g class="${cls}" transform="translate(0 ${dy})">
+      <ellipse cx="60" cy="33" rx="37" ry="7.5" fill="#7a4e24"/>
+      <path d="M39 33 C40 14 48 9 60 9 C72 9 80 14 81 33 Z" fill="#a8693a"/>
+      <path d="M39.6 26 H80.4 L81 32 H39 Z" fill="#4f3116"/>
+      <path d="M71 12 C74 5 82 4 86 7 C82 11 76 13 71 12 Z" fill="#8cc63f"/></g>`;
+  const olhos = (cy = 50, dx = 0) => `<circle cx="${51 + dx}" cy="${cy}" r="2.6" fill="${TINTA}"/><circle cx="${69 + dx}" cy="${cy}" r="2.6" fill="${TINTA}"/>
+      <circle cx="${52 + dx}" cy="${cy - 1}" r=".8" fill="#fff"/><circle cx="${70 + dx}" cy="${cy - 1}" r=".8" fill="#fff"/>`;
+  const olhosFechados = (cy = 50) => `<path d="M47 ${cy} q4 3 8 0 M65 ${cy} q4 3 8 0" stroke="${TINTA}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const sobrancelhas = (cy = 44, alto = false) => `<path d="M46 ${cy - (alto ? 3 : 0)} q5 -3 10 0 M64 ${cy - (alto ? 3 : 0)} q5 -3 10 0" stroke="#4f3116" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const sorriso = (cy = 61) => `<path d="M52 ${cy} Q60 ${cy + 6} 68 ${cy}" stroke="#6b3a1f" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const boca = (cy = 61) => `<ellipse cx="60" cy="${cy + 2}" rx="3.2" ry="4" fill="#6b3a1f"/>`;
+  const binoculo = (dy = 0) => `<g transform="translate(0 ${dy})">
+      <circle cx="35" cy="56" r="6.5" fill="${PELE}"/><circle cx="85" cy="56" r="6.5" fill="${PELE}"/>
+      <rect x="47" y="43" width="26" height="9" rx="3" fill="#2f3539"/>
+      <circle cx="46" cy="50" r="12" fill="#2f3539"/><circle cx="74" cy="50" r="12" fill="#2f3539"/>
+      <circle cx="46" cy="50" r="8" fill="#bfe3ec"/><circle cx="74" cy="50" r="8" fill="#bfe3ec"/>
+      <circle cx="43" cy="47" r="2.6" fill="#fff"/><circle cx="71" cy="47" r="2.6" fill="#fff"/></g>`;
+  // moita: alta (cobre o queixo) ou baixa (mostra boca e mãos)
+  const moita = (baixa = false) => `<g transform="translate(0 ${baixa ? 14 : 0})">
+      <path d="M2 104 C1 88 10 80 20 81 C21 69 33 64 42 70 C47 58 62 57 68 66 C76 57 92 60 94 72 C106 70 117 79 117 92 L118 120 L2 120 Z" fill="#78b13a"/>
+      <path d="M28 120 L28 104 C29 92 38 86 48 88 C52 77 66 75 72 83 C80 76 94 79 96 90 C106 89 114 95 114 104 L114 120 Z" fill="#3f7a27"/>
+      <path d="M20 81 C24 83 27 86 28 90 M68 66 C70 70 71 73 70 77" stroke="#5c9a2e" stroke-width="2" fill="none" stroke-linecap="round"/></g>`;
+  const svg = (corpo, extra = '', vb = '0 0 120 104') => `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">${extra}${corpo}</svg>`;
+
+  const poses = {
+    // padrão: espiando de binóculo
+    espiando: () => svg(rosto() + chapeu() + binoculo() + moita()),
+
+    // sonar ligado: mão em concha na orelha, ondas de som saindo
+    ouvindo: () => svg(rosto() + chapeu() + olhosFechados(50) + sobrancelhas(44) + sorriso(60)
+      + `<ellipse cx="83" cy="53" rx="5" ry="7" fill="#e4b083"/><path d="M84 46 q9 2 8 13 q-4 2 -6 -1" fill="${PELE}" stroke="#d9a274" stroke-width="1"/>`
+      + `<g class="det-ondas" fill="none" stroke="#5f9e22" stroke-width="2.4" stroke-linecap="round">
+           <path d="M98 44 q6 9 0 18" style="animation-delay:0s"/><path d="M104 39 q10 14 0 28" style="animation-delay:.25s"/><path d="M110 34 q14 19 0 38" style="animation-delay:.5s"/></g>`
+      + moita(true)),
+
+    // calibrando: "shh", dedo nos lábios e ampulheta
+    calibrando: () => svg(rosto() + chapeu() + olhos(50, 3) + sobrancelhas(44)
+      + `<rect x="57.5" y="56" width="5" height="13" rx="2.5" fill="#e4b083"/><circle cx="60" cy="70" r="5.5" fill="${PELE}"/>`
+      + `<g class="det-ampulheta" transform="translate(92 52)"><path d="M-7 -11 H7 M-7 11 H7" stroke="#7a4e24" stroke-width="2.4" stroke-linecap="round"/>
+           <path d="M-5.5 -10 L5.5 -10 L0.8 0 L5.5 10 L-5.5 10 L-0.8 0 Z" fill="#fdf3dd" stroke="#7a4e24" stroke-width="1.4"/>
+           <path d="M-3.4 -7 H3.4 L0 -1 Z M-3.6 9 H3.6 L0 4 Z" fill="#e3a03a"/></g>`
+      + `<text x="4" y="66" class="det-shh" font-family="ui-rounded, -apple-system, sans-serif" font-weight="800" font-size="13" fill="#5f9e22">shh…</text>`
+      + moita(true)),
+
+    // movimento detectado: binóculo alto, "!" e chapéu pulando
+    surpreso: () => svg(rosto(50) + chapeu(-3, 'det-pula') + binoculo(-4)
+      + `<g class="det-exclama"><rect x="96" y="2" width="9" height="22" rx="4.5" fill="#d4573a"/><circle cx="100.5" cy="31" r="4.6" fill="#d4573a"/></g>`
+      + `<path d="M8 40 h10 M5 50 h12 M8 60 h9" stroke="#c98a1f" stroke-width="2.6" stroke-linecap="round" class="det-tracos"/>`
+      + moita()),
+
+    // respiração: estetoscópio e coração pulsando
+    estetoscopio: () => svg(rosto() + chapeu() + olhos(50) + sobrancelhas(44) + sorriso(60)
+      + moita(true) + `<path d="M46 66 q-6 12 4 17 M74 66 q6 12 -4 17 M50 83 q10 6 20 0" stroke="#2f3539" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+         <circle cx="60" cy="87" r="5" fill="#9aa7ad" stroke="#2f3539" stroke-width="1.6"/>`
+      + `<g class="det-coracao" transform="translate(96 30)"><path d="M0 6 C-10 -2 -6 -12 0 -6 C6 -12 10 -2 0 6 Z" fill="#d4573a"/></g>`
+      + `<path d="M84 46 h4 l3 -6 l4 12 l3 -6 h6" stroke="#d4573a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="det-ecg"/>`),
+
+    // trena: fita métrica se esticando
+    trena: () => svg(rosto() + chapeu() + olhos(50, 2) + sobrancelhas(44) + sorriso(60)
+      + `<rect x="70" y="60" width="16" height="14" rx="3.5" fill="#e3a03a" stroke="#7a4e24" stroke-width="1.5"/><circle cx="78" cy="67" r="3" fill="#7a4e24"/>
+         <circle cx="68" cy="68" r="5.5" fill="${PELE}"/>
+         <g class="det-fita"><rect x="86" y="64" width="32" height="6" fill="#ffd25e" stroke="#c98a1f" stroke-width="1"/>
+           <path d="M90 64 v3 M94 64 v2 M98 64 v3 M102 64 v2 M106 64 v3 M110 64 v2 M114 64 v3" stroke="#7a4e24" stroke-width="1"/></g>`
+      + moita(true)),
+
+    // varredura: farol girando atrás
+    farol: () => svg(`<g class="det-feixe" style="transform-origin:60px 50px"><path d="M60 50 L-10 -6 L10 -24 Z" fill="#ffd25e" opacity=".55"/></g>`
+      + rosto() + chapeu() + binoculo() + moita()),
+
+    // laboratório: lupa sobre um mapinha com alfinetes
+    mapa: () => svg(rosto() + chapeu() + olhos(50, -3) + sobrancelhas(44) + sorriso(60)
+      + `<g transform="translate(8 62) rotate(-8)"><rect width="34" height="24" rx="2" fill="#fdf8ea" stroke="#c9b98f" stroke-width="1.2"/>
+           <path d="M4 18 l8 -6 l7 4 l10 -9" stroke="#8cc63f" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="2.2" fill="#d4573a"/><circle cx="29" cy="7" r="2.2" fill="#d4573a"/></g>`
+      + `<g class="det-lupa"><circle cx="30" cy="70" r="8.5" fill="#bfe3ec" fill-opacity=".55" stroke="#2f3539" stroke-width="2.6"/><path d="M36 76 l9 9" stroke="#2f3539" stroke-width="3.6" stroke-linecap="round"/><circle cx="46" cy="86" r="5" fill="${PELE}"/></g>`
+      + moita(true)),
+
+    // replay do iPhone: celular com botão de play
+    filme: () => svg(rosto() + chapeu() + olhos(50, 2) + sobrancelhas(44) + sorriso(60) + moita(true)
+      + `<g transform="translate(78 48) rotate(10)"><rect width="20" height="34" rx="4" fill="#2f3539"/><rect x="2.5" y="4" width="15" height="25" rx="1.5" fill="#eaf4dc"/>
+           <path class="det-play" d="M7.5 11 L14 16.5 L7.5 22 Z" fill="#5f9e22"/></g><circle cx="80" cy="76" r="5.5" fill="${PELE}"/>`),
+
+    // Mac: notebook com Wi-Fi pulsando
+    notebook: () => svg(rosto(46) + chapeu(-6) + olhos(45) + sobrancelhas(39) + sorriso(55) + moita(true)
+      + `<path d="M30 70 h60 l-4 21 h-52 Z" fill="#b8c0c4" stroke="#8d979c" stroke-width="1"/><rect x="20" y="90" width="80" height="5" rx="2.5" fill="#8d979c"/><circle cx="60" cy="80" r="3" fill="#eef2f3"/>
+         <g class="det-wifi" fill="none" stroke="#5f9e22" stroke-width="2.6" stroke-linecap="round" transform="translate(98 30)">
+           <path d="M-4 4 q4 -4 8 0" style="animation-delay:0s"/><path d="M-9 -1 q9 -8 18 0" style="animation-delay:.2s"/><path d="M-14 -6 q14 -12 28 0" style="animation-delay:.4s"/></g>`),
+
+    // desligado: dormindo, zzz
+    dormindo: () => svg(rosto(54) + chapeu(3) + olhosFechados(53) + `<path d="M56 64 q4 2 8 0" stroke="#6b3a1f" stroke-width="2" fill="none" stroke-linecap="round"/>`
+      + `<g class="det-zzz" font-family="ui-rounded, -apple-system, sans-serif" font-weight="800" fill="#75836c">
+           <text x="86" y="40" font-size="11" style="animation-delay:0s">z</text><text x="94" y="30" font-size="14" style="animation-delay:.6s">z</text><text x="104" y="18" font-size="17" style="animation-delay:1.2s">z</text></g>`
+      + moita()),
+
+    // comemorando: joinha e brilhos
+    comemorando: () => svg(rosto() + chapeu(0, 'det-pula') + `<path d="M46 49 q5 -4 10 0 M64 49 q5 -4 10 0" stroke="${TINTA}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+      + `<path d="M50 59 Q60 70 70 59 Z" fill="#6b3a1f"/>`
+      + `<g transform="translate(86 50)"><rect x="-6" y="0" width="12" height="13" rx="4" fill="${PELE}"/><rect x="-3" y="-11" width="6" height="14" rx="3" fill="${PELE}"/></g>`
+      + `<g class="det-brilho" fill="#e3a03a"><path d="M14 30 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 Z" style="animation-delay:0s"/><path d="M104 22 l1.6 4 l4 1.6 l-4 1.6 l-1.6 4 l-1.6 -4 l-4 -1.6 l4 -1.6 Z" style="animation-delay:.4s"/><path d="M98 58 l1.4 3.4 l3.4 1.4 l-3.4 1.4 l-1.4 3.4 l-1.4 -3.4 l-3.4 -1.4 l3.4 -1.4 Z" style="animation-delay:.8s"/></g>`
+      + moita(true)),
+
+    // algo deu errado: confuso, "?"
+    confuso: () => svg(rosto() + chapeu(0) + olhos(50) + `<path d="M46 45 q5 -2 10 1 M64 42 q5 -3 10 0" stroke="#4f3116" stroke-width="2" fill="none" stroke-linecap="round"/>`
+      + `<path d="M53 62 q4 -3 7 0 q4 3 7 0" stroke="#6b3a1f" stroke-width="2" fill="none" stroke-linecap="round"/>`
+      + `<text x="92" y="30" class="det-interroga" font-family="ui-rounded, -apple-system, sans-serif" font-weight="800" font-size="26" fill="#c98a1f">?</text>`
+      + moita(true)),
+  };
+  return { svg: nome => (poses[nome] || poses.espiando)(), nomes: Object.keys(poses) };
+})();
 
 </script>
 <script>
@@ -991,6 +1105,19 @@ const $ = id => document.getElementById(id);
 const fmt = (n, d = 1) => n.toFixed(d).replace('.', ',');
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const MONO = 'ui-monospace, "SF Mono", Menlo, monospace';
+// ---------- Detetive: poses e balão de reação ----------
+function pose(el, nome) { if (!el || el.dataset.atual === nome) return; el.dataset.atual = nome; el.innerHTML = Detetive.svg(nome); }
+document.querySelectorAll('[data-pose]').forEach(el => pose(el, el.dataset.pose));
+const REACAO = { chaves: {}, timer: 0, pronto: false };
+function reagir(nome, texto, chave = nome, espera = 5000, dur = 3600) {
+  if (!REACAO.pronto) return;
+  const agora = performance.now();
+  if (REACAO.chaves[chave] && agora - REACAO.chaves[chave] < espera) return;
+  REACAO.chaves[chave] = agora;
+  pose($('reacaoArte'), nome); $('reacaoTxt').textContent = texto;
+  const r = $('reacao'); r.classList.add('on'); clearTimeout(REACAO.timer); REACAO.timer = setTimeout(() => r.classList.remove('on'), dur);
+}
+document.getElementById('reacao').onclick = () => document.getElementById('reacao').classList.remove('on');
 const servidoPeloSensor = location.protocol === 'http:' && /^(\d+\.){3}\d+$|^localhost$|\.local$/.test(location.hostname);
 
 // ---------- Cores ----------
@@ -1295,7 +1422,7 @@ $('chips').addEventListener('click', e => {
   LAB.opc[b.dataset.k] = !LAB.opc[b.dataset.k]; b.classList.toggle('ativa', LAB.opc[b.dataset.k]);
 });
 $('btnAuto').onclick = () => { LAB.auto = !LAB.auto; $('btnAuto').textContent = LAB.auto ? 'Pausar passeio' : 'Retomar passeio'; };
-$('btnLabCalib').onclick = () => iniciarCalibracaoLab();
+$('btnLabCalib').onclick = () => { iniciarCalibracaoLab(); reagir('calibrando', 'Recalibrando a sala vazia…', 'lab-cal', 2000, 2400); };
 
 // ================= AO VIVO =================
 const VIVO = { dados: null, conectado: false, falhas: 0, emAndamento: false, suave: 0, estadoAnterior: '', assinatura: '',
@@ -1342,7 +1469,7 @@ function aplicarVivo() {
   $('hudHora').textContent = new Date().toLocaleTimeString('pt-BR');
   const idx = FATORES.reduce((m, f, i) => Math.abs(f - d.fator) < Math.abs(FATORES[m] - d.fator) ? i : m, 0);
   if (document.activeElement !== $('sens')) { $('sens').value = idx + 1; $('sensOut').textContent = NOMES[idx]; }
-  if (d.estado === 'movimento' && VIVO.estadoAnterior !== 'movimento') bip();
+  if (d.estado === 'movimento' && VIVO.estadoAnterior !== 'movimento') { bip(); reagir('surpreso', 'Opa! Movimento perto do Mac.', 'vivo-mov', 7000, 2600); }
   VIVO.estadoAnterior = d.estado;
   const ev = d.eventos || [], ass = (d.totalEventos || 0) + '|' + (ev[0] ? ev[0].hora : '');
   if (ass !== VIVO.assinatura) {
@@ -1595,8 +1722,8 @@ function painelGrav() {
   $('hudGravTempo').textContent = `${mmss(i)} / ${mmss(n)}`;
 }
 
-$('gravTexto').addEventListener('input', e => analisarGravacao(e.target.value));
-$('btnExemplo').onclick = () => { const t = exemploGravacao(); $('gravTexto').value = t; analisarGravacao(t, false); };
+$('gravTexto').addEventListener('input', e => { analisarGravacao(e.target.value); if (GRAV.v.length) reagir('comemorando', `Gravação com ${GRAV.v.length} leituras: ${GRAV.ev.length} ${GRAV.ev.length === 1 ? 'movimento' : 'movimentos'}.`, 'grav-colar', 3000); });
+$('btnExemplo').onclick = () => { const t = exemploGravacao(); $('gravTexto').value = t; analisarGravacao(t, false); reagir('filme', 'Reproduzindo uma gravação de exemplo.', 'grav-ex', 3000); };
 $('btnLimpar').onclick = () => limparGravacao();
 $('btnPlay').onclick = () => {
   if (!GRAV.v.length) return;
@@ -1621,8 +1748,10 @@ const C_TEMP = t => (331.3 + 0.606 * t) / 343;
 SON.escala = C_TEMP(25);
 try { const aj = JSON.parse(localStorage.getItem('csl-ajuste-trena') || 'null'); if (aj) { SON.temp = aj.temp; SON.escala = C_TEMP(aj.temp); SON.off = aj.off || 0; } } catch (e) {}
 function salvarAjuste() { try { localStorage.setItem('csl-ajuste-trena', JSON.stringify({ temp: SON.temp, off: SON.off })); } catch (e) {} }
-const SCAN = { ativo: false, a0: null, ang: 0, temGiro: false, ouvindo: false, aMax: 70, nA: 71, grid: null, cont: null, piso: 1, formas: [], img: null, imgT: 0, formasT: 0 };
-const BANDAS = { 1: { f0: 17500, f1: 20500, nome: 'Discreta 17,5–20,5 kHz' }, 2: { f0: 14500, f1: 17500, nome: 'Forte 14,5–17,5 kHz' } };
+const SCAN = { ativo: false, a0: null, ang: 0, temGiro: false, ouvindo: false, aMax: 70, nA: 71, grid: null, cont: null, piso: 1, formas: [], img: null, imgT: 0, formasT: 0,
+               nitida: null, nitidez: true, sigma: 17, vel: 0, ultAng: 0, ultT: 0, rapido: 0 };
+const BANDAS = { 1: { f0: 17500, f1: 20500, nome: 'Discreta 17,5–20,5 kHz' }, 2: { f0: 14500, f1: 17500, nome: 'Forte 14,5–17,5 kHz' },
+                 3: { f0: 14000, f1: 20500, nome: 'Precisa 14–20,5 kHz' } };
 const WF_COLS = 360;
 const WORKLET = `class Coletor extends AudioWorkletProcessor { constructor(){ super(); this.b = new Float32Array(1024); this.n = 0; }
   process(inp){ const c = inp[0] && inp[0][0]; if (c) { for (let i = 0; i < c.length; i++) { this.b[this.n++] = c[i]; if (this.n === 1024) { this.port.postMessage(this.b.slice(0)); this.n = 0; } } } return true; } }
@@ -1662,7 +1791,8 @@ function sonQuadro() {
   if (SON.quadros % 3 === 0) SON.trena = SonarDSP.trena(pr);
   if (!o.calibrando) rastrearSonar(o.alvos || [], performance.now());
   // varredura: guarda o perfil estático na direção para onde o iPhone aponta
-  if (SCAN.ativo && SCAN.temGiro && SCAN.grid) {
+  if (SCAN.ativo && SCAN.temGiro && SCAN.grid && SCAN.vel > 60) SCAN.rapido++;
+  else if (SCAN.ativo && SCAN.temGiro && SCAN.grid) {
     if (SON.quadros % 10 === 0 || SCAN.piso === 1) SCAN.piso = SonarDSP.mediana(pr.est, Math.ceil(0.18 / pr.dr));
     const a = Math.round((clamp(SCAN.ang, -SCAN.aMax, SCAN.aMax) + SCAN.aMax) / 2), R = SON.R, base = a * R, inv = 1 / (SCAN.piso || 1e-9);
     const w = SCAN.cont[a] ? 0.3 : 1;
@@ -1691,16 +1821,27 @@ function velocidade() { const T = alvoFirme(); return T && T.hits >= 8 ? T.v * S
 // ---------- varredura de formas ----------
 function scanZerar() {
   SCAN.grid = new Float32Array(SCAN.nA * SON.R); SCAN.cont = new Uint16Array(SCAN.nA);
-  SCAN.formas = []; SCAN.a0 = null; SCAN.piso = 1; SCAN.imgT = 0;
+  SCAN.formas = []; SCAN.a0 = null; SCAN.piso = 1; SCAN.imgT = 0; SCAN.nitida = null; SCAN.rapido = 0; SCAN.vel = 0; SCAN.ultT = 0;
   $('fLista').innerHTML = '<li class="vazio">Faça uma varredura para começar</li>'; $('fTotal').textContent = '';
 }
 function scanOrientacao(e) {
-  let h = typeof e.webkitCompassHeading === 'number' ? e.webkitCompassHeading : (e.alpha != null ? 360 - e.alpha : null);
+  // alpha vem do giroscópio (suave, sem tremer perto de metal); a bússola só é usada se não houver alpha
+  let h = e.alpha != null ? 360 - e.alpha : (typeof e.webkitCompassHeading === 'number' ? e.webkitCompassHeading : null);
   if (h == null || SON.demo) return;
   SCAN.temGiro = true;
   if (SCAN.a0 == null) SCAN.a0 = h;
   const d = ((h - SCAN.a0 + 540) % 360) - 180;
-  SCAN.ang = SCAN.ang * 0.5 + d * 0.5;
+  SCAN.ang = SCAN.ang * 0.6 + d * 0.4;
+  scanVelocidade(performance.now());
+}
+function scanVelocidade(agora) {
+  if (SCAN.ultT) { const dt = (agora - SCAN.ultT) / 1000; if (dt > 0.02) { SCAN.vel = SCAN.vel * 0.8 + Math.abs(SCAN.ang - SCAN.ultAng) / dt * 0.2; SCAN.ultAng = SCAN.ang; SCAN.ultT = agora; } }
+  else { SCAN.ultAng = SCAN.ang; SCAN.ultT = agora; }
+}
+function scanCobertura() {
+  if (!SCAN.cont) return 0;
+  let n = 0, t = 0; for (let a = 0; a < SCAN.nA; a++) { const g = a * 2 - SCAN.aMax; if (Math.abs(g) <= 60) { t++; if (SCAN.cont[a] >= 3) n++; } }
+  return Math.round(n / t * 100);
 }
 async function scanIniciar() {
   $('fAviso').textContent = '';
@@ -1717,19 +1858,24 @@ async function scanIniciar() {
     setTimeout(() => { if (SCAN.ativo && !SCAN.temGiro && !SON.demo) $('fAviso').textContent = 'Este aparelho não informou para onde está apontando (sem giroscópio). A visão Formas funciona no iPhone.'; }, 2500);
   } else SCAN.temGiro = true;
   scanZerar(); SCAN.ativo = true; SCAN.ang = 0;
+  reagir('farol', SON.demo ? 'Varrendo a sala simulada…' : 'Gire devagar de um lado para o outro, como um farol.', 'varrer', 3000);
   $('btnVarrer').textContent = 'Parar varredura'; $('btnVarrer').classList.add('ligado');
 }
 function scanParar() {
   SCAN.ativo = false; $('btnVarrer').textContent = 'Iniciar varredura'; $('btnVarrer').classList.remove('ligado');
   if (SCAN.grid) scanFormas();
+  const n = SCAN.formas.length;
+  reagir(n ? 'comemorando' : 'confuso', n ? `Encontrei ${n} ${n > 1 ? 'formas' : 'forma'}! Veja a lista.` : 'Não reconheci formas. Gire mais devagar e cubra mais ângulos.', 'varrer-fim', 2000);
 }
 // Reconhecimento: nitidez angular (em cada distância, só a direção mais forte), depois agrupamento e classificação
 function scanFormas() {
   if (!SCAN.grid || !SON.pr) return;
-  const R = SON.R, nA = SCAN.nA, G = SCAN.grid, dr = SON.pr.dr, r0 = Math.ceil(Math.max(0.18, SON.pr.zona || 0) / dr), W = 6;
+  const R = SON.R, nA = SCAN.nA, dr = SON.pr.dr, r0 = Math.ceil(Math.max(0.18, SON.pr.zona || 0) / dr);
+  SCAN.nitida = SCAN.nitidez ? SonarDSP.deconvAngular(SCAN.grid, SCAN.cont, nA, R, SCAN.sigma / 2, 70, r0, 1.5) : null;
+  const G = SCAN.nitida || SCAN.grid, W = SCAN.nitida ? 3 : 6;
   const gan = new Float64Array(R); for (let r = 0; r < R; r++) gan[r] = SonarDSP.ganho(r * dr);
   let gmax = 0; for (let a = 0; a < nA; a++) if (SCAN.cont[a]) for (let r = r0; r < R; r++) if (G[a * R + r] * gan[r] > gmax) gmax = G[a * R + r] * gan[r];
-  const lim = Math.max(5, gmax * 0.1), pts = [];
+  const lim = SCAN.nitida ? Math.max(1.5, gmax * 0.12) : Math.max(5, gmax * 0.1), pts = [];
   for (let a = 0; a < nA; a++) {
     if (!SCAN.cont[a]) continue;
     for (let r = r0 + 1; r < R - 1; r++) {
@@ -1748,7 +1894,7 @@ function scanFormas() {
   // agrupa pontos a menos de 25 cm uns dos outros
   const pai = pts.map((_, i) => i), raiz = i => pai[i] === i ? i : (pai[i] = raiz(pai[i]));
   for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++)
-    if (Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < 0.3) pai[raiz(i)] = raiz(j);
+    if (Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < (SCAN.nitida ? 0.17 : 0.3)) pai[raiz(i)] = raiz(j);
   const mapa = new Map(); pts.forEach((p, i) => { const k = raiz(i); if (!mapa.has(k)) mapa.set(k, []); mapa.get(k).push(p); });
   let grupos = [...mapa.values()];
   // pedaços que caem na mesma reta (com até 90 cm de buraco) são a mesma superfície
@@ -1763,7 +1909,27 @@ function scanFormas() {
     for (let i = 0; i < grupos.length && !mudou; i++) for (let j = i + 1; j < grupos.length && !mudou; j++) {
       const A = grupos[i], B = grupos[j];
       let gap = Infinity; for (const p of A) for (const q of B) gap = Math.min(gap, Math.hypot(p.x - q.x, p.y - q.y));
-      if (gap < 0.7 && A.length >= 2 && B.length >= 2 && reta(A.concat(B)) < 0.05) { grupos[i] = A.concat(B); grupos.splice(j, 1); mudou = true; }
+      if (gap < (SCAN.nitida ? 0.5 : 0.7) && A.length >= 2 && B.length >= 2 && reta(A.concat(B)) < 0.05) { grupos[i] = A.concat(B); grupos.splice(j, 1); mudou = true; }
+    }
+  }
+  // uma superfície plana já clara "absorve" pedaços na mesma reta, mesmo com um buraco no meio (sombra de um objeto à frente)
+  const eixo = g => {
+    const n = g.length, mx = g.reduce((s, p) => s + p.x, 0) / n, my = g.reduce((s, p) => s + p.y, 0) / n;
+    let cxx = 0, cyy = 0, cxy = 0; for (const p of g) { cxx += (p.x - mx) ** 2; cyy += (p.y - my) ** 2; cxy += (p.x - mx) * (p.y - my); }
+    const phi = 0.5 * Math.atan2(2 * cxy, cxx - cyy), ux = Math.cos(phi), uy = Math.sin(phi), pr = g.map(p => (p.x - mx) * ux + (p.y - my) * uy);
+    return { mx, my, ux, uy, ini: Math.min(...pr), fim: Math.max(...pr) };
+  };
+  for (let mudou = true; mudou;) {
+    mudou = false;
+    for (let i = 0; i < grupos.length && !mudou; i++) {
+      const A = grupos[i]; if (A.length < 5 || reta(A) >= 0.05) continue;
+      const e = eixo(A); if (e.fim - e.ini < 0.7) continue;
+      for (let j = 0; j < grupos.length && !mudou; j++) {
+        if (j === i) continue;
+        const B = grupos[j], perp = B.map(p => Math.abs((p.x - e.mx) * -e.uy + (p.y - e.my) * e.ux)), ao = B.map(p => (p.x - e.mx) * e.ux + (p.y - e.my) * e.uy);
+        const gap = Math.max(0, Math.min(...ao) - e.fim, e.ini - Math.max(...ao));
+        if (Math.max(...perp) < 0.1 && gap < 1.6) { grupos[i] = A.concat(B); grupos.splice(j, 1); mudou = true; }
+      }
     }
   }
   grupos = grupos.map(g => g.sort((p, q) => p.a - q.a));
@@ -1848,6 +2014,7 @@ async function sonLigar(deviceId) {
   const erro = $('sonErro'); erro.textContent = ''; $('sonDica').textContent = '';
   if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     erro.textContent = 'O microfone não está disponível nesta página. Aqui no chat ele é bloqueado: abra o app pelo endereço https dele no Safari. Enquanto isso, veja a demonstração.';
+    reagir('confuso', 'Aqui o microfone está bloqueado. Que tal a demonstração?', 'erro-mic');
     return;
   }
   sonParar();
@@ -1882,6 +2049,7 @@ async function sonLigar(deviceId) {
     SON.ativo = true;
     ctx.onstatechange = () => { if (SON.ativo && ctx.state !== 'running' && ctx.state !== 'closed') $('sonDica').textContent = 'O sistema pausou o áudio (ligação, outro app ou tela bloqueada). Toque em Desligar e Ligar sonar de novo.'; else if (ctx.state === 'running') $('sonDica').textContent = ''; };
     sonTravarTela(); sonListarMics();
+    reagir('ouvindo', SON.banda === 0 ? 'Ouvindo os ecos… primeiro eu testo qual som funciona melhor aqui.' : 'Ouvindo os ecos… fique parado um instante.', 'ligar');
     $('btnSonar').textContent = 'Desligar sonar'; $('btnSonar').classList.add('ligado');
     $('sonHudModo').textContent = 'SONAR · AO VIVO';
   } catch (e) {
@@ -1892,6 +2060,7 @@ async function sonLigar(deviceId) {
           ? 'Aqui dentro do chat do Claude o microfone é sempre bloqueado, mesmo com o Safari liberado: não é um problema do seu iPhone. Para o sonar de verdade, abra o app pelo endereço https dele (fora do chat). Enquanto isso, use a Demonstração.'
           : 'O acesso ao microfone foi negado. No iPhone: Ajustes → Apps → Safari → Microfone → Permitir. Depois recarregue a página.')
       : 'Não consegui ligar o sonar: ' + (e && e.message ? e.message : e);
+    reagir('confuso', e && e.name === 'NotAllowedError' ? 'Sem acesso ao microfone por aqui.' : 'Não consegui ligar o sonar.', 'erro-mic');
   }
 }
 function sonParar() {
@@ -1907,10 +2076,11 @@ function sonDemo() {
   sonParar(); $('sonErro').textContent = '';
   if (SON.demo) { SON.demo = false; $('btnSonarDemo').textContent = 'Demonstração'; $('sonHudModo').textContent = 'SONAR'; SON.ultimo = null; return; }
   SON.demo = true; SON.dsp = null; sonMontar(); SON.acum = 0;
+  reagir('espiando', 'Demonstração: uma sala simulada, com gente andando e respirando.', 'demo');
   $('btnSonarDemo').textContent = 'Parar demonstração'; $('sonHudModo').textContent = 'SONAR · DEMONSTRAÇÃO';
 }
 
-$('btnSonar').onclick = () => { if (SON.ativo) sonParar(); else { if (SON.demo) sonDemo(); sonLigar(); } };
+$('btnSonar').onclick = () => { if (SON.ativo) { sonParar(); reagir('dormindo', 'Sonar desligado. Até a próxima ronda!', 'desligar'); } else { if (SON.demo) sonDemo(); sonLigar(); } };
 $('btnSonarDemo').onclick = () => sonDemo();
 $('btnSonarCalib').onclick = () => { if (SON.pr) SonarDSP.iniciarCalibracao(SON.pr); };
 segmentado('segVisao', null);
@@ -1923,8 +2093,13 @@ $('segVisao').addEventListener('click', e => {
     formas: 'Visto de cima: o iPhone fica na ponta de baixo do leque. Gire-o devagar para preencher o mapa.' }[SON.visao];
   if (SON.visao !== 'formas' && SCAN.ativo) scanParar();
   ultimoPainel = 0;
+  reagir(...{ eco: ['ouvindo', 'Ecograma: o movimento aparece ao longo do tempo.'],
+              dist: ['trena', 'Modo trena: aponte a parte de baixo do iPhone para uma parede.'],
+              formas: ['farol', 'Toque em Iniciar varredura e gire devagar, como um farol.'] }[SON.visao], 'visao-' + SON.visao, 4000);
 });
 $('btnVarrer').onclick = () => { if (SCAN.ativo) scanParar(); else scanIniciar(); };
+segmentado('segNitidez', v => { SCAN.nitidez = v === 1; if (SCAN.grid) { scanFormas(); SCAN.imgT = 0; } });
+segmentado('segFeixe', v => { SCAN.sigma = v; if (SCAN.grid) { scanFormas(); SCAN.imgT = 0; } });
 $('btnLimparVarr').onclick = () => { scanZerar(); if (SCAN.ativo) { SCAN.a0 = null; } };
 segmentado('segTemp', v => { SON.temp = v; SON.escala = C_TEMP(v); salvarAjuste(); });
 document.querySelectorAll('#segTemp button').forEach(b => b.classList.toggle('ativa', Number(b.dataset.v) === SON.temp));
@@ -1932,8 +2107,9 @@ $('btnAjustar').onclick = () => {
   const cm = Number(String($('dReal').value).replace(',', '.'));
   if (!(cm >= 20 && cm <= 500)) { $('dAjusteTxt').textContent = 'digite entre 20 e 500 cm'; return; }
   const p = SON.trena && SON.trena.perto;
-  if (!p) { $('dAjusteTxt').textContent = 'nenhum eco firme agora'; return; }
+  if (!p) { $('dAjusteTxt').textContent = 'nenhum eco firme agora'; reagir('confuso', 'Não achei um eco firme. Aponte para a parede e espere 2 segundos.', 'ajuste-erro', 1500); return; }
   SON.off = cm / 100 - p.d * SON.escala; salvarAjuste(); ultimoPainel = 0;
+  reagir('comemorando', `Trena ajustada para ${Math.round(cm)} cm!`, 'ajuste', 1500);
 };
 $('btnZerarAjuste').onclick = e => { e.preventDefault(); SON.off = 0; salvarAjuste(); ultimoPainel = 0; };
 segmentado('segAlc', v => { SON.alc = v; if (SON.ativo || SON.demo) { sonMontar(); scanZerar(); } });
@@ -2037,8 +2213,8 @@ function desenharFormas(t) {
       const a = Math.round((th + SCAN.aMax) / 2);
       if (!SCAN.cont[a]) { d[k] = 120; d[k + 1] = 130; d[k + 2] = 110; d[k + 3] = 14; continue; }
       const ri = Math.round(((rr * SON.alc - SON.off) / SON.escala) / dr);
-      const val = ri >= 0 && ri < R ? SCAN.grid[a * R + ri] * SonarDSP.ganho(ri * dr) : 0;
-      const q = clamp(Math.log2(Math.max(val, 1)) / 4.5, 0, 1), i = (q * 255) | 0;
+      const fonte = SCAN.nitida || SCAN.grid, val = ri >= 0 && ri < R ? fonte[a * R + ri] * SonarDSP.ganho(ri * dr) : 0;
+      const q = SCAN.nitida ? clamp(Math.log2(1 + Math.max(val, 0)) / 4.5, 0, 1) : clamp(Math.log2(Math.max(val, 1)) / 4.5, 0, 1), i = (q * 255) | 0;
       d[k] = LUT[i * 4]; d[k + 1] = LUT[i * 4 + 1]; d[k + 2] = LUT[i * 4 + 2]; d[k + 3] = Math.max(LUT[i * 4 + 3], 26);
     }
     ctx.putImageData(im, 0, 0);
@@ -2070,7 +2246,7 @@ function desenharFormas(t) {
   });
   // o iPhone na origem
   g.fillStyle = '#5f9e22'; g.fillRect(ox - 6, oy, 12, 20); g.textAlign = 'left';
-  if (!SCAN.ativo && !(SCAN.cont && SCAN.cont.some(x => x))) {
+  if ((SON.ativo || SON.demo) && !SCAN.ativo && !(SCAN.cont && SCAN.cont.some(x => x))) {
     g.fillStyle = '#75836c'; g.font = '600 13px -apple-system, system-ui, sans-serif'; g.textAlign = 'center';
     g.fillText('Toque em Iniciar varredura e gire o iPhone devagar', w / 2, oy - Rpx * 0.45); g.textAlign = 'left';
   }
@@ -2099,19 +2275,27 @@ function desenharSonResp() {
 function painelSonar() {
   const o = SON.ultimo, ligado = SON.ativo || SON.demo, pill = $('pill');
   const sobre = $('sonSobre');
+  pose($('sonArte'), !ligado ? 'dormindo' : SON.teste ? 'ouvindo' : 'calibrando');
   if (!ligado) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Sonar desligado'; $('sonSobreSub').textContent = 'toque em Ligar sonar ou veja a demonstração'; }
   else if (SON.teste) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Ajustando o som…'; $('sonSobreSub').textContent = 'testando a melhor faixa para este aparelho'; }
   else if (!o || o.calibrando) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Calibrando…'; $('sonSobreSub').textContent = 'fique parado por 3 segundos'; }
   else sobre.classList.add('oculto');
   const cal = SON.teste || !o || o.calibrando;
   const firme = alvoFirme(), nMov = o && o.alvos ? o.alvos.length : 0;
+  // reações: calibração pronta, movimento novo, várias pessoas
+  const prontoAgora = ligado && o && !o.calibrando && !SON.teste;
+  if (prontoAgora && !SON.estavaPronto) reagir('comemorando', 'Calibrado! Agora pode se mexer.', 'calibrado', 8000);
+  SON.estavaPronto = prontoAgora;
+  if (firme && !SON.viaMov) reagir('surpreso', `Opa! Movimento a ${fmt(realD(firme.d), 2)} m.`, 'mov', 7000, 2600);
+  if (nMov > 1 && !SON.viaVarios) reagir('surpreso', `${nMov} coisas se mexendo ao mesmo tempo!`, 'varios', 12000, 2600);
+  SON.viaMov = !!firme; SON.viaVarios = nMov > 1;
   pill.textContent = !ligado ? 'Desligado' : cal ? 'Calibrando' : firme ? (nMov > 1 ? nMov + ' em movimento' : 'Movimento') : 'Parado';
   pill.className = 'pill ' + (!ligado ? '' : cal ? 'calibrando' : firme ? 'movimento' : 'parado');
   $('fonte').textContent = SON.demo ? 'sonar · demonstração (simulado)' : SON.ativo ? 'sonar · microfone e alto-falante' : 'sonar acústico';
   const dAlvo = firme ? realD(firme.d) : null, tr = SON.trena, perto = tr && tr.perto ? realD(tr.perto.d) : null, v = velocidade();
   $('sonAlvo').innerHTML = dAlvo != null ? `${fmt(dAlvo, 2)} <small>m</small>` : '—';
   $('sonHudAlvo').textContent = SON.visao === 'dist' ? (perto != null ? `MAIS PERTO ${fmt(perto, 2)} M` : '')
-    : SON.visao === 'formas' ? (SCAN.ativo ? `APONTANDO ${SCAN.ang >= 0 ? '+' : ''}${Math.round(SCAN.ang)}°` : '')
+    : SON.visao === 'formas' ? (SCAN.ativo ? `APONTANDO ${SCAN.ang >= 0 ? '+' : ''}${Math.round(SCAN.ang)}° · ${scanCobertura()}% COBERTO` : (SCAN.cont && SCAN.cont.some(x => x) ? `${scanCobertura()}% COBERTO` : ''))
     : dAlvo != null ? `MOVIMENTO A ${fmt(dAlvo, 2)} M` : ligado && o && !o.calibrando ? 'SEM MOVIMENTO' : '';
   $('sonPerfilTxt').textContent = dAlvo != null ? `pico a ${fmt(dAlvo, 2)} m` : '—';
   $('dPerto').innerHTML = perto != null ? `${fmt(perto, 2)} <small>m</small>` : '—';
@@ -2123,9 +2307,16 @@ function painelSonar() {
   $('dTotal').textContent = ps.length ? ps.length + (ps.length > 1 ? ' ecos' : ' eco') : '';
   $('dLista').innerHTML = ps.length ? ps.map(p => `<li><span>${fmt(realD(p.d), 2)} m${p === tr.perto ? ' · mais perto' : ''}</span><span>${p.rel > 0.66 ? 'forte' : p.rel > 0.33 ? 'médio' : 'fraco'} · ${Math.round(p.db)} dB</span></li>`).join('')
     : `<li class="vazio">${ligado ? 'Nenhum eco firme à frente' : '—'}</li>`;
+  if (SON.visao === 'formas' && SCAN.ativo && SCAN.temGiro) {
+    const av = $('fAviso');
+    if (SCAN.vel > 60) av.textContent = 'Gire mais devagar: rápido assim os ecos de direções diferentes se misturam.';
+    else if (/Gire mais devagar/.test(av.textContent)) av.textContent = '';
+  }
   $('dAjusteTxt').textContent = `${SON.temp} °C${SON.off ? ` · ajuste ${SON.off > 0 ? '+' : '−'}${Math.round(Math.abs(SON.off) * 100)} cm` : ''}`;
   const r = SON.resp, ok = r && r.conf > 0.45 && r.parado && r.bpm >= 6 && r.bpm <= 40;
   $('sonResp').innerHTML = ok ? `${Math.round(r.bpm)} <small>/min</small>` : '—';
+  if (ok && !SON.viaResp) reagir('estetoscopio', `Respiração detectada: ${Math.round(r.bpm)} por minuto.`, 'resp', 30000);
+  SON.viaResp = !!ok;
   $('sonRespTxt').textContent = ok ? `${Math.round(r.bpm)}/min · a ${fmt(r.d, 2)} m` : r && !r.parado ? 'aguardando ficar parado' : ligado ? 'medindo…' : '—';
   const cs = SON.contagem, taxa = cs.length > 2 ? (cs.length - 1) / ((cs[cs.length - 1] - cs[0]) / 1000) : 0;
   const banda = SON.demo ? 'demonstração' : SON.ativo && SON.bandaUsada ? BANDAS[SON.bandaUsada].nome : '';
@@ -2151,6 +2342,10 @@ function trocarAba(nova) {
   for (const [k, id] of [['lab', 'abaLab'], ['sonar', 'abaSonar'], ['grav', 'abaGrav'], ['vivo', 'abaVivo']]) $(id).setAttribute('aria-selected', String(k === aba));
   try { if (location.hash.slice(1) !== ABA_HASH[aba]) history.replaceState(null, '', '#' + ABA_HASH[aba]); } catch (e) {}
   ultimoPainel = 0;
+  reagir(...{ lab: ['mapa', 'Laboratório: arraste a pessoa pelo mapa e veja os sensores a acharem.'],
+              sonar: ['ouvindo', 'Sonar: o iPhone vira um morcego. Ligue ou veja a demonstração.'],
+              grav: ['filme', 'Aqui você cola a gravação do atalho e vê o replay.'],
+              vivo: ['notebook', servidoPeloSensor ? 'Conectando ao sensor do Mac…' : 'Este modo funciona aberto pelo endereço do Mac.'] }[nova], 'aba-' + nova, 6000);
   $('abaLab').classList.toggle('ativa', aba === 'lab'); $('abaVivo').classList.toggle('ativa', aba === 'vivo'); $('abaGrav').classList.toggle('ativa', aba === 'grav'); $('abaSonar').classList.toggle('ativa', aba === 'sonar');
   $('telaLab').classList.toggle('oculto-total', aba !== 'lab'); $('telaVivo').classList.toggle('oculto-total', aba !== 'vivo'); $('telaGrav').classList.toggle('oculto-total', aba !== 'grav'); $('telaSonar').classList.toggle('oculto-total', aba !== 'sonar');
   $('vivoAviso').classList.toggle('oculto-total', servidoPeloSensor);
@@ -2184,7 +2379,7 @@ function quadro(t) {
     SON.acum += dt / 1000 * SON.pr.fps; let k = 0;
     while (SON.acum >= 1 && k < 6) {
       const varrendo = SCAN.ativo;
-      if (varrendo) SCAN.ang = 58 * Math.sin(2 * Math.PI * SON.dm.t / 14);
+      if (varrendo) { SCAN.ang = 58 * Math.sin(2 * Math.PI * SON.dm.t / 14); scanVelocidade(performance.now()); }
       SonarDSP.passoDemo(SON.dm, SON.pre, SON.pim, varrendo ? SCAN.ang : 0, !varrendo);
       sonQuadro(); SON.acum -= 1; k++;
     }
@@ -2217,6 +2412,7 @@ window.addEventListener('resize', () => { clearTimeout(redimensionar); redimensi
 
 montarLab();
 trocarAba(aba);
+setTimeout(() => { REACAO.pronto = true; reagir('espiando', 'Olá! Sou o detetive da Câmera sem Lente.', 'oi'); }, 900);
 requestAnimationFrame(quadro);
 cicloVivo();
 </script>
