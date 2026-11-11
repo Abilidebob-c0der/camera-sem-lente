@@ -758,6 +758,12 @@ const SonarDSP = (() => {
     }
     let b = s.lag, bv = -1;                           // acompanha pequenas derivas do relógio de áudio
     for (let d = -6; d <= 6; d++) { const i = (s.lag + d + N) % N, v = Math.hypot(re[i], im[i]); if (v > bv) { bv = v; b = i; } }
+    if (s.A0 && bv < 0.35 * s.A0) {                   // o eco direto sumiu: falha de áudio ou sinal perdido
+      s.ruins = (s.ruins || 0) + 1;
+      if (s.ruins >= 2) { s.lag = -1; s.lagHist.fill(0); s.lagN = 0; s.ruins = 0; s.ressinc = (s.ressinc || 0) + 1; }
+      return false;
+    }
+    s.ruins = 0;
     s.lag = b; s.A0 = s.A0 ? s.A0 * 0.9 + bv * 0.1 : bv;
     let ru = 0; for (let k = 0; k < 96; k++) { const i = (b + (N >> 1) - 400 + k * 8) % N; ru += Math.hypot(re[i], im[i]); }
     const snr = bv > 0 ? clampSnr(20 * Math.log10(bv / Math.max(ru / 96, 1e-9))) : 0; s.snr = s.snr ? s.snr * 0.9 + snr * 0.1 : snr;
@@ -822,21 +828,21 @@ const SonarDSP = (() => {
       }
       return { calibrando: true, progresso: c.n / total, alvo: null };
     }
-    let melhor = -1, mv = 1.3, perto = -1;
-    for (let r = 0; r < R; r++) {
-      pr.razao[r] = r < pr.r0 ? 0 : pr.mov[r] / pr.lim[r];
-      if (pr.razao[r] > mv) { mv = pr.razao[r]; melhor = r; }
-      if (perto < 0 && pr.razao[r] > 1.6 && r >= pr.r0 && r + 1 < R && pr.razao[r + 1] > 1) perto = r;
+    for (let r = 0; r < R; r++) pr.razao[r] = r < pr.r0 ? 0 : pr.mov[r] / pr.lim[r];
+    // até 3 alvos: picos acima de 1,3× o limiar, separados por pelo menos 25 cm
+    const sep = Math.round(0.25 / dr), cand = [];
+    for (let r = Math.max(pr.r0, 1); r < R - 1; r++) {
+      const q = pr.razao[r];
+      if (q > 1.3 && q >= pr.razao[r - 1] && q > pr.razao[r + 1]) {
+        const a = pr.razao[r - 1], c = pr.razao[r + 1], den = a - 2 * q + c;
+        cand.push({ r, d: (r + (den < 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (a - c) / den)) : 0)) * dr, forca: q });
+      }
     }
-    if (melhor >= 0) pr.ultimoMov = pr.n;
-    let dAlvo = melhor * dr;
-    if (melhor > 0 && melhor < R - 1) {
-      const a = pr.razao[melhor - 1], b = pr.razao[melhor], c = pr.razao[melhor + 1], den = a - 2 * b + c;
-      if (den < 0) dAlvo = (melhor + Math.max(-0.5, Math.min(0.5, 0.5 * (a - c) / den))) * dr;
-    }
-    return { calibrando: false, progresso: 1,
-             alvo: melhor >= 0 ? { d: dAlvo, forca: mv } : null,
-             perto: perto >= 0 ? perto * dr : null };
+    cand.sort((x, y) => y.forca - x.forca);
+    const alvos = [];
+    for (const c of cand) { if (alvos.length >= 3) break; if (alvos.every(a => Math.abs(a.r - c.r) >= sep)) alvos.push(c); }
+    if (alvos.length) pr.ultimoMov = pr.n;
+    return { calibrando: false, progresso: 1, alvo: alvos[0] || null, alvos };
   }
 
   // ---- Perfil estático: o que está parado à frente (paredes, móveis, objetos) ----
@@ -846,6 +852,13 @@ const SonarDSP = (() => {
     for (let r = 0; r < pr.R; r++) {
       pr.estB[r] += a * (Math.hypot(pre[r], pim[r]) - pr.estB[r]);
       pr.est[r] = pr.estB[r] * ganho(r * pr.dr);
+    }
+    if (pr.nEst % 8 === 1) {                          // onde a cauda do eco direto termina
+      const B = pr.estB, piso = mediana(B, Math.floor(pr.R / 2)), lim = Math.max(piso * 6, 0.004), meia = pr.meia || 0.04;
+      let r = Math.ceil(Math.max(0.1, meia * 1.6) / pr.dr);
+      while (r < pr.R - 3 && !(B[r] < lim && B[r + 1] < lim && B[r + 2] < lim) && r * pr.dr < 0.6) r++;
+      const z = Math.min(Math.max(r * pr.dr, 0.12), 0.6);
+      pr.zona = pr.zona ? (z > pr.zona ? z : pr.zona * 0.8 + z * 0.2) : z;
     }
     return pr.est;
   }
@@ -868,8 +881,9 @@ const SonarDSP = (() => {
     const a = Array.prototype.slice.call(v, r0).sort((x, y) => x - y);
     return a[Math.floor(a.length / 2)] || 1e-9;
   }
-  function trena(pr, zonaMorta = 0.18) {
+  function trena(pr, zonaMorta) {
     const v = pr.est; if (!v) return null;
+    if (zonaMorta == null) zonaMorta = pr.zona || 0.18;
     const r0 = Math.ceil(zonaMorta / pr.dr), piso = mediana(v, r0);
     const ps = picos(v, r0, pr.R, pr.dr, piso * 4);
     if (!ps.length) return { pontos: [], perto: null, piso };
@@ -888,7 +902,7 @@ const SonarDSP = (() => {
       const q = unicos.find(u => Math.abs(u.d - p.d) < 0.07);
       if (q) { if (p.amp > q.amp) { q.amp = p.amp; q.rel = p.rel; q.db = p.db; } } else unicos.push({ ...p });
     }
-    return { pontos: unicos, perto: unicos.find(p => p.rel >= 0.3) || null, piso };
+    return { pontos: unicos, perto: unicos.find(p => p.db >= 14) || null, piso, zona: zonaMorta };
   }
 
   // Respiração: procura a faixa de distância que oscila devagar e mede o período
@@ -958,6 +972,7 @@ const SonarDSP = (() => {
     }
     if (pessoas) {
       if (t > 5 && t % 40 < 16) somaEco(dm, pre, pim, 1.7 + 0.95 * Math.sin(t * 0.55), 0.018 / 1.7 ** 2, 0);   // pessoa andando
+      if (t % 40 > 9 && t % 40 < 15) somaEco(dm, pre, pim, 2.55 + 0.3 * Math.sin(t * 0.9), 0.014 / 2.5 ** 2, 1); // segunda pessoa, mais longe
       const dr = 0.85 + 0.004 * Math.sin(2 * Math.PI * 0.24 * t);                                                  // pessoa respirando (≈14/min)
       somaEco(dm, pre, pim, dr, 0.03 / dr ** 2, 0);
     }
@@ -1623,7 +1638,7 @@ function sonMontar() {        // (re)cria processador e ecograma para o alcance 
   SON.wfCtx = SON.wf.getContext('2d'); SON.wfCtx.fillStyle = '#fbfaf4'; SON.wfCtx.fillRect(0, 0, WF_COLS, SON.R);
   SON.wfCol = SON.wfCtx.createImageData(1, SON.R);
   if (SON.demo) SON.dm = SonarDSP.criarDemo(SON.R, dr);
-  SON.ultimo = null; SON.resp = null; SON.trena = null; SON.trilha = [];
+  SON.ultimo = null; SON.resp = null; SON.trena = null; SON.trk = null;
   if (!SCAN.grid || SCAN.grid.length !== SCAN.nA * SON.R) scanZerar();
 }
 
@@ -1645,9 +1660,7 @@ function sonQuadro() {
   pr.meia = SON.demo ? 0.0375 : (SON.dsp && SON.dsp.meia) || 0.04;
   SonarDSP.estatico(pr, SON.pre, SON.pim);
   if (SON.quadros % 3 === 0) SON.trena = SonarDSP.trena(pr);
-  const agora = performance.now();
-  if (o.alvo) { SON.trilha.push({ t: agora, d: o.alvo.d }); }
-  while (SON.trilha.length && (agora - SON.trilha[0].t > 1200 || (SON.trilha.length > 1 && agora - SON.trilha[SON.trilha.length - 1].t > 500))) SON.trilha.shift();
+  if (!o.calibrando) rastrearSonar(o.alvos || [], performance.now());
   // varredura: guarda o perfil estático na direção para onde o iPhone aponta
   if (SCAN.ativo && SCAN.temGiro && SCAN.grid) {
     if (SON.quadros % 10 === 0 || SCAN.piso === 1) SCAN.piso = SonarDSP.mediana(pr.est, Math.ceil(0.18 / pr.dr));
@@ -1657,13 +1670,23 @@ function sonQuadro() {
     SCAN.cont[a]++;
   }
 }
-function velocidade() {
-  const tr = SON.trilha; if (tr.length < 6) return null;
-  const t0 = tr[0].t; let sx = 0, sy = 0, sxx = 0, sxy = 0;
-  for (const p of tr) { const x = (p.t - t0) / 1000; sx += x; sy += p.d; sxx += x * x; sxy += x * p.d; }
-  const n = tr.length, den = n * sxx - sx * sx;
-  return den ? (n * sxy - sx * sy) / den * SON.escala : null;
+// Rastreador α-β: segue a pessoa principal entre os quadros, suaviza a distância e estima a velocidade
+function rastrearSonar(alvos, agora) {
+  let T = SON.trk;
+  if (T) {
+    const dt = Math.max((agora - T.t) / 1000, 0.02), pred = T.d + T.v * dt;
+    let m = null, md = 0.4;
+    for (const a of alvos) { const e = Math.abs(a.d - pred); if (e < md) { md = e; m = a; } }
+    if (m) { const r = m.d - pred; T.d = pred + 0.45 * r; T.v = clamp(T.v + 0.12 * r / dt, -3, 3); T.ultimo = agora; T.hits++; }
+    else { T.d = pred; T.v *= 0.85; }
+    T.t = agora;
+    if (agora - T.ultimo > 600) SON.trk = T = null;
+  }
+  if (!T && alvos.length) SON.trk = { d: alvos[0].d, v: 0, t: agora, ultimo: agora, hits: 1 };
 }
+// alvo "firme": visto em vários quadros seguidos (evita piscadas de um quadro só)
+function alvoFirme() { const T = SON.trk; return T && T.hits >= 3 && performance.now() - T.ultimo < 350 ? T : null; }
+function velocidade() { const T = alvoFirme(); return T && T.hits >= 8 ? T.v * SON.escala : null; }
 
 // ---------- varredura de formas ----------
 function scanZerar() {
@@ -1703,7 +1726,7 @@ function scanParar() {
 // Reconhecimento: nitidez angular (em cada distância, só a direção mais forte), depois agrupamento e classificação
 function scanFormas() {
   if (!SCAN.grid || !SON.pr) return;
-  const R = SON.R, nA = SCAN.nA, G = SCAN.grid, dr = SON.pr.dr, r0 = Math.ceil(0.18 / dr), W = 6;
+  const R = SON.R, nA = SCAN.nA, G = SCAN.grid, dr = SON.pr.dr, r0 = Math.ceil(Math.max(0.18, SON.pr.zona || 0) / dr), W = 6;
   const gan = new Float64Array(R); for (let r = 0; r < R; r++) gan[r] = SonarDSP.ganho(r * dr);
   let gmax = 0; for (let a = 0; a < nA; a++) if (SCAN.cont[a]) for (let r = r0; r < R; r++) if (G[a * R + r] * gan[r] > gmax) gmax = G[a * R + r] * gan[r];
   const lim = Math.max(5, gmax * 0.1), pts = [];
@@ -1943,9 +1966,10 @@ function desenharEco() {
   // ícone do iPhone no topo e marcador do alvo à direita
   g.fillStyle = '#5f9e22'; g.fillRect(x1 + 9, y0 - 6, 10, 6);
   const o = SON.ultimo;
-  if (o && o.alvo) {
-    const y = y0 + o.alvo.d / SON.alc * (y1 - y0);
-    g.fillStyle = '#d4573a'; g.beginPath(); g.moveTo(x1 + 4, y); g.lineTo(x1 + 14, y - 6); g.lineTo(x1 + 14, y + 6); g.closePath(); g.fill();
+  const firme = alvoFirme();
+  if (o && o.alvos) for (const a of o.alvos) {
+    const y = y0 + a.d / SON.alc * (y1 - y0), grande = firme && Math.abs(a.d - firme.d) < 0.15, k = grande ? 7 : 4.5;
+    g.fillStyle = grande ? '#d4573a' : 'rgba(212,87,58,0.55)'; g.beginPath(); g.moveTo(x1 + 4, y); g.lineTo(x1 + 4 + k * 1.6, y - k); g.lineTo(x1 + 4 + k * 1.6, y + k); g.closePath(); g.fill();
   }
 }
 function visorSonar() {
@@ -1982,11 +2006,16 @@ function desenharDist() {
     if (ehPerto || p.rel > 0.5) { g.fillStyle = ehPerto ? '#26331f' : '#5a6852'; g.font = `${ehPerto ? 700 : 600} 11px ` + MONO; g.fillText(fmt(realD(p.d), 2), x, y - alt - 6); }
   }
   // quem se move: triângulo vermelho abaixo da régua + velocidade
-  if (o && o.alvo) {
-    const x = X(realD(o.alvo.d)), vel = velocidade();
+  const firme = alvoFirme();
+  if (o && o.alvos) for (const a of o.alvos) {
+    if (firme && Math.abs(a.d - firme.d) < 0.15) continue;
+    const x = X(realD(a.d)); g.fillStyle = 'rgba(212,87,58,0.5)'; g.beginPath(); g.moveTo(x, y + 30); g.lineTo(x - 6, y + 41); g.lineTo(x + 6, y + 41); g.closePath(); g.fill();
+  }
+  if (firme) {
+    const x = X(realD(firme.d)), vel = velocidade();
     g.fillStyle = '#d4573a'; g.beginPath(); g.moveTo(x, y + 30); g.lineTo(x - 8, y + 44); g.lineTo(x + 8, y + 44); g.closePath(); g.fill();
     g.font = '700 11px ' + MONO;
-    g.fillText(`movimento ${fmt(realD(o.alvo.d), 2)} m${vel != null && Math.abs(vel) >= 0.05 ? (vel < 0 ? ' ← ' : ' → ') + fmt(Math.abs(vel), 1) + ' m/s' : ''}`, clamp(x, 90, w - 90), y + 60);
+    g.fillText(`movimento ${fmt(realD(firme.d), 2)} m${vel != null && Math.abs(vel) >= 0.05 ? (vel < 0 ? ' ← ' : ' → ') + fmt(Math.abs(vel), 1) + ' m/s' : ''}`, clamp(x, 90, w - 90), y + 60);
   }
   g.textAlign = 'left';
 }
@@ -2075,10 +2104,11 @@ function painelSonar() {
   else if (!o || o.calibrando) { sobre.classList.remove('oculto'); $('sonSobreTit').firstChild.textContent = 'Calibrando…'; $('sonSobreSub').textContent = 'fique parado por 3 segundos'; }
   else sobre.classList.add('oculto');
   const cal = SON.teste || !o || o.calibrando;
-  pill.textContent = !ligado ? 'Desligado' : cal ? 'Calibrando' : o.alvo ? 'Movimento' : 'Parado';
-  pill.className = 'pill ' + (!ligado ? '' : cal ? 'calibrando' : o.alvo ? 'movimento' : 'parado');
+  const firme = alvoFirme(), nMov = o && o.alvos ? o.alvos.length : 0;
+  pill.textContent = !ligado ? 'Desligado' : cal ? 'Calibrando' : firme ? (nMov > 1 ? nMov + ' em movimento' : 'Movimento') : 'Parado';
+  pill.className = 'pill ' + (!ligado ? '' : cal ? 'calibrando' : firme ? 'movimento' : 'parado');
   $('fonte').textContent = SON.demo ? 'sonar · demonstração (simulado)' : SON.ativo ? 'sonar · microfone e alto-falante' : 'sonar acústico';
-  const dAlvo = o && o.alvo ? realD(o.alvo.d) : null, tr = SON.trena, perto = tr && tr.perto ? realD(tr.perto.d) : null, v = velocidade();
+  const dAlvo = firme ? realD(firme.d) : null, tr = SON.trena, perto = tr && tr.perto ? realD(tr.perto.d) : null, v = velocidade();
   $('sonAlvo').innerHTML = dAlvo != null ? `${fmt(dAlvo, 2)} <small>m</small>` : '—';
   $('sonHudAlvo').textContent = SON.visao === 'dist' ? (perto != null ? `MAIS PERTO ${fmt(perto, 2)} M` : '')
     : SON.visao === 'formas' ? (SCAN.ativo ? `APONTANDO ${SCAN.ang >= 0 ? '+' : ''}${Math.round(SCAN.ang)}°` : '')
